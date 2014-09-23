@@ -1,4 +1,29 @@
-//! dox
+//! Bzip compression for Rust
+//!
+//! This library contains bindings to libbz2 to support bzip compression and
+//! decompression for Rust. The streams offered in this library are primarily
+//! found in the `reader` and `writer` modules. Both compressors and
+//! decompressors are available in each module depending on what operation you
+//! need.
+//!
+//! Access to the raw decompression/compression stream is also provided through
+//! the `raw` module which has a much closer interfact to libbz2.
+//!
+//! # Example
+//!
+//! ```
+//! use std::io::BufReader;
+//! use bzip2::reader::{BzCompressor, BzDecompressor};
+//!
+//! // Round trip some bytes from a byte source, into a compressor, into a
+//! // decompressor, and finally into a vector.
+//! let data = BufReader::new(b"Hello, World!");
+//! let compressor = BzCompressor::new(data, bzip2::BestCompression);
+//! let mut decompressor = BzDecompressor::new(compressor);
+//!
+//! let contents = decompressor.read_to_string().unwrap();
+//! assert_eq!(contents.as_slice(), "Hello, World!");
+//! ```
 
 #![feature(unsafe_destructor)]
 #![deny(missing_doc)]

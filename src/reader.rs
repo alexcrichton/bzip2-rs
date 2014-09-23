@@ -1,4 +1,4 @@
-//! dox
+//! Reader-based compression/decompression streams
 
 use std::io::{mod, IoResult};
 

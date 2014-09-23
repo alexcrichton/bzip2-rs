@@ -1,4 +1,4 @@
-//! dox
+//! Writer-based compression/decompression streams
 
 use std::io::IoResult;
 
