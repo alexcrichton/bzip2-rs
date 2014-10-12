@@ -2,24 +2,24 @@ extern crate libc;
 
 use libc::{c_int, c_uint, c_void, c_char};
 
-pub static BZ_RUN: c_int = 0;
-pub static BZ_FLUSH: c_int = 1;
-pub static BZ_FINISH: c_int = 2;
+pub const BZ_RUN: c_int = 0;
+pub const BZ_FLUSH: c_int = 1;
+pub const BZ_FINISH: c_int = 2;
 
-pub static BZ_OK: c_int = 0;
-pub static BZ_RUN_OK: c_int = 1;
-pub static BZ_FLUSH_OK: c_int = 2;
-pub static BZ_FINISH_OK: c_int = 3;
-pub static BZ_STREAM_END: c_int = 4;
-pub static BZ_SEQUENCE_ERROR: c_int = -1;
-pub static BZ_PARAM_ERROR: c_int = -2;
-pub static BZ_MEM_ERROR: c_int = -3;
-pub static BZ_DATA_ERROR: c_int = -4;
-pub static BZ_DATA_ERROR_MAGIC: c_int = -5;
-pub static BZ_IO_ERROR: c_int = -6;
-pub static BZ_UNEXPECTED_EOF: c_int = -7;
-pub static BZ_OUTBUFF_FULL: c_int = -8;
-pub static BZ_CONFIG_ERROR: c_int = -9;
+pub const BZ_OK: c_int = 0;
+pub const BZ_RUN_OK: c_int = 1;
+pub const BZ_FLUSH_OK: c_int = 2;
+pub const BZ_FINISH_OK: c_int = 3;
+pub const BZ_STREAM_END: c_int = 4;
+pub const BZ_SEQUENCE_ERROR: c_int = -1;
+pub const BZ_PARAM_ERROR: c_int = -2;
+pub const BZ_MEM_ERROR: c_int = -3;
+pub const BZ_DATA_ERROR: c_int = -4;
+pub const BZ_DATA_ERROR_MAGIC: c_int = -5;
+pub const BZ_IO_ERROR: c_int = -6;
+pub const BZ_UNEXPECTED_EOF: c_int = -7;
+pub const BZ_OUTBUFF_FULL: c_int = -8;
+pub const BZ_CONFIG_ERROR: c_int = -9;
 
 #[repr(C)]
 pub struct bz_stream {
