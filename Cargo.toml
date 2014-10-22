@@ -5,4 +5,5 @@ version = "0.0.1"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 
 [dependencies.libbz2-sys]
+version = "*"
 path = "libbz2-sys"
