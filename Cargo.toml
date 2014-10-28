@@ -4,6 +4,7 @@ name = "bzip2"
 version = "0.0.1"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 license = "MIT/APL2"
+readme = "README.md"
 keywords = ["bzip", "encoding"]
 repository = "https://github.com/alexcrichton/bzip2-rs"
 homepage = "https://github.com/alexcrichton/bzip2-rs"
