@@ -3,6 +3,15 @@
 name = "bzip2"
 version = "0.0.1"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
+license = "MIT/APL2"
+keywords = ["bzip", "encoding"]
+repository = "https://github.com/alexcrichton/bzip2-rs"
+homepage = "https://github.com/alexcrichton/bzip2-rs"
+documentation = "http://alexcrichton.com/bzip2-rs"
+description = """
+Bindings to libbz2 for bzip2 compression and decompression exposed as
+Reader/Writer streams.
+"""
 
 [dependencies.libbz2-sys]
 version = "*"
