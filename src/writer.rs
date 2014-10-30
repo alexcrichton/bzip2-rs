@@ -46,7 +46,7 @@ impl<W: Writer> BzCompressor<W> {
                     try!(self.w.as_mut().unwrap().write(self.buf.as_slice()));
                     self.buf.truncate(0);
                 }
-                n => fail!("unexpected return: {}", n),
+                n => panic!("unexpected return: {}", n),
             }
         }
 
@@ -111,7 +111,7 @@ impl<W: Writer> BzDecompressor<W> {
                 ffi::BZ_STREAM_END => { self.done = true; break }
                 n if n >= 0 => {}
                 ffi::BZ_OUTBUFF_FULL => {}
-                n => fail!("unexpected return: {}", n),
+                n => panic!("unexpected return: {}", n),
             }
         }
 

@@ -57,5 +57,5 @@ extern {
 
 #[no_mangle]
 pub fn bz_internal_error(errcode: c_int) {
-    fail!("bz internal error: {}", errcode);
+    panic!("bz internal error: {}", errcode);
 }
