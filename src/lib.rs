@@ -26,7 +26,7 @@
 //! ```
 
 #![feature(unsafe_destructor)]
-#![deny(missing_doc)]
+#![deny(missing_docs)]
 
 extern crate "libbz2-sys" as ffi;
 extern crate libc;
