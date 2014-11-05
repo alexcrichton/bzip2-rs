@@ -1,6 +1,13 @@
 [package]
 
-name = "libbz2-sys"
+name = "bzip2-sys"
 version = "0.0.1"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
-build = "make -C build"
+build = "build.rs"
+
+[lib]
+name = "bzip2-sys"
+path = "lib.rs"
+
+[build-dependencies.gcc]
+git = "https://github.com/alexcrichton/gcc-rs"

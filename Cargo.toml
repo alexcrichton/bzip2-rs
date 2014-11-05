@@ -10,10 +10,10 @@ repository = "https://github.com/alexcrichton/bzip2-rs"
 homepage = "https://github.com/alexcrichton/bzip2-rs"
 documentation = "http://alexcrichton.com/bzip2-rs"
 description = """
-Bindings to libbz2 for bzip2 compression and decompression exposed as
+Bindings to libbzip2 for bzip2 compression and decompression exposed as
 Reader/Writer streams.
 """
 
-[dependencies.libbz2-sys]
+[dependencies.bzip2-sys]
 version = "*"
-path = "libbz2-sys"
+path = "bzip2-sys"
