@@ -1,0 +1,4 @@
+[root]
+name = "libbz2-sys"
+version = "0.0.1"
+
