@@ -3,7 +3,7 @@
 use std::io::{mod, IoResult};
 
 use ffi;
-use raw::{Stream, Run, Finish};
+use raw::{Stream, Action};
 
 /// A compression stream which wraps an uncompressed stream of data. Compressed
 /// data will be read from the stream.
@@ -62,7 +62,7 @@ impl<R: Reader> Reader for BzCompressor<R> {
 
             let before_in = self.stream.total_in();
             let before_out = self.stream.total_out();
-            let action = if eof {Finish} else {Run};
+            let action = if eof {Action::Finish} else {Action::Run};
             let rc = self.stream.compress(self.buf.slice_from(self.pos),
                                           buf.slice_from_mut(read),
                                           action);
@@ -151,7 +151,7 @@ mod tests {
     #[test]
     fn smoke() {
         let m = MemReader::new(vec![1, 2, 3, 4, 5, 6, 7, 8]);
-        let mut c = BzCompressor::new(m, ::Default);
+        let mut c = BzCompressor::new(m, ::CompressionLevel::Default);
         let data = c.read_to_end().unwrap();
         let mut d = w::BzDecompressor::new(MemWriter::new());
         d.write(data.as_slice()).unwrap();
@@ -162,7 +162,7 @@ mod tests {
     #[test]
     fn smoke2() {
         let m = MemReader::new(vec![1, 2, 3, 4, 5, 6, 7, 8]);
-        let c = BzCompressor::new(m, ::Default);
+        let c = BzCompressor::new(m, ::CompressionLevel::Default);
         let mut d = BzDecompressor::new(c);
         let data = d.read_to_end().unwrap();
         assert_eq!(data.as_slice(),

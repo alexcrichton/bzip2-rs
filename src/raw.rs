@@ -42,7 +42,7 @@ impl Stream {
         unsafe {
             let mut raw = box mem::zeroed();
             assert_eq!(ffi::BZ2_bzDecompressInit(&mut *raw, 0, small as c_int), 0);
-            Stream { raw: raw, kind: Decompress }
+            Stream { raw: raw, kind: Kind::Decompress }
         }
     }
 
@@ -71,7 +71,7 @@ impl Stream {
             let mut raw = box mem::zeroed();
             assert_eq!(ffi::BZ2_bzCompressInit(&mut *raw, lvl as c_int, 0,
                                                work_factor as c_int), 0);
-            Stream { raw: raw, kind: Compress }
+            Stream { raw: raw, kind: Kind::Compress }
         }
     }
 
@@ -160,8 +160,8 @@ impl Drop for Stream {
     fn drop(&mut self) {
         unsafe {
             assert_eq!(match self.kind {
-                Compress => ffi::BZ2_bzCompressEnd(&mut *self.raw),
-                Decompress => ffi::BZ2_bzDecompressEnd(&mut *self.raw),
+                Kind::Compress => ffi::BZ2_bzCompressEnd(&mut *self.raw),
+                Kind::Decompress => ffi::BZ2_bzDecompressEnd(&mut *self.raw),
             }, 0);
         }
     }
