@@ -59,7 +59,7 @@ impl<W: Writer> BzCompressor<W> {
 
     /// Unwrap the underlying writer, finishing the compression stream.
     pub fn unwrap(mut self) -> IoResult<W> {
-        try!(self.do_write([], Action::Finish));
+        try!(self.do_write(&[], Action::Finish));
         Ok(self.w.take().unwrap())
     }
 }
@@ -70,7 +70,7 @@ impl<W: Writer> Writer for BzCompressor<W> {
     }
 
     fn flush(&mut self) -> IoResult<()> {
-        try!(self.do_write([], Action::Flush));
+        try!(self.do_write(&[], Action::Flush));
         self.w.as_mut().unwrap().flush()
     }
 }
@@ -79,7 +79,7 @@ impl<W: Writer> Writer for BzCompressor<W> {
 impl<W: Writer> Drop for BzCompressor<W> {
     fn drop(&mut self) {
         if self.w.is_some() {
-            let _ = self.do_write([], Action::Finish);
+            let _ = self.do_write(&[], Action::Finish);
         }
     }
 }
@@ -124,7 +124,7 @@ impl<W: Writer> BzDecompressor<W> {
 
     /// Unwrap the underlying writer, finishing the compression stream.
     pub fn unwrap(mut self) -> IoResult<W> {
-        try!(self.do_write([], Action::Finish));
+        try!(self.do_write(&[], Action::Finish));
         Ok(self.w.take().unwrap())
     }
 }
@@ -143,7 +143,7 @@ impl<W: Writer> Writer for BzDecompressor<W> {
 impl<W: Writer> Drop for BzDecompressor<W> {
     fn drop(&mut self) {
         if self.w.is_some() {
-            let _ = self.do_write([], Action::Finish);
+            let _ = self.do_write(&[], Action::Finish);
         }
     }
 }
