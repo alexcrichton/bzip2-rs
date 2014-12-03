@@ -39,7 +39,7 @@ impl<R: Reader> BzCompressor<R> {
     }
 
     /// Unwrap the underlying writer, finishing the compression stream.
-    pub fn unwrap(self) -> R { self.r }
+    pub fn into_inner(self) -> R { self.r }
 }
 
 impl<R: Reader> Reader for BzCompressor<R> {
@@ -99,7 +99,7 @@ impl<R: Reader> BzDecompressor<R> {
     }
 
     /// Unwrap the underlying writer, finishing the compression stream.
-    pub fn unwrap(self) -> R { self.r }
+    pub fn into_inner(self) -> R { self.r }
 }
 
 impl<R: Reader> Reader for BzDecompressor<R> {
@@ -155,7 +155,7 @@ mod tests {
         let data = c.read_to_end().unwrap();
         let mut d = w::BzDecompressor::new(MemWriter::new());
         d.write(data.as_slice()).unwrap();
-        assert_eq!(d.unwrap().unwrap().unwrap().as_slice(),
+        assert_eq!(d.into_inner().ok().unwrap().into_inner().as_slice(),
                    [1, 2, 3, 4, 5, 6, 7, 8].as_slice());
     }
 

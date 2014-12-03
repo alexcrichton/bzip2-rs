@@ -13,12 +13,13 @@
 //!
 //! ```
 //! use std::io::BufReader;
+//! use bzip2::CompressionLevel;
 //! use bzip2::reader::{BzCompressor, BzDecompressor};
 //!
 //! // Round trip some bytes from a byte source, into a compressor, into a
 //! // decompressor, and finally into a vector.
 //! let data = BufReader::new(b"Hello, World!");
-//! let compressor = BzCompressor::new(data, bzip2::BestCompression);
+//! let compressor = BzCompressor::new(data, CompressionLevel::Smallest);
 //! let mut decompressor = BzDecompressor::new(compressor);
 //!
 //! let contents = decompressor.read_to_string().unwrap();
@@ -41,23 +42,23 @@ pub mod reader;
 pub fn compress(data: &[u8], level: CompressionLevel) -> Vec<u8> {
     let mut wr = writer::BzCompressor::new(MemWriter::new(), level);
     wr.write(data).unwrap();
-    wr.unwrap().unwrap().unwrap()
+    wr.into_inner().ok().unwrap().into_inner()
 }
 
 /// Decompress a block of compressed input data into a raw output vector.
 pub fn decompress(data: &[u8]) -> Vec<u8> {
     let mut wr = writer::BzDecompressor::new(MemWriter::new());
     wr.write(data).unwrap();
-    wr.unwrap().unwrap().unwrap()
+    wr.into_inner().ok().unwrap().into_inner()
 }
 
 /// When compressing data, the compression level can be specified by a value in
 /// this enum.
 pub enum CompressionLevel {
     /// Optimize for the best speed of encoding.
-    BestSpeed = 1,
+    Fastest = 1,
     /// Optimize for the size of data being encoded.
-    BestCompression = 9,
+    Smallest = 9,
     /// Choose the default compression, a balance between speed and size.
     Default = 6,
 }

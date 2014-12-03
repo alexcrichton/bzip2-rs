@@ -1,6 +1,6 @@
 //! Writer-based compression/decompression streams
 
-use std::io::IoResult;
+use std::io::{IoResult, IoError};
 
 use ffi;
 use raw::{Stream, Action};
@@ -58,8 +58,11 @@ impl<W: Writer> BzCompressor<W> {
     }
 
     /// Unwrap the underlying writer, finishing the compression stream.
-    pub fn unwrap(mut self) -> IoResult<W> {
-        try!(self.do_write(&[], Action::Finish));
+    pub fn into_inner(mut self) -> Result<W, (BzCompressor<W>, IoError)> {
+        match self.do_write(&[], Action::Finish) {
+            Ok(()) => {}
+            Err(e) => return Err((self, e)),
+        }
         Ok(self.w.take().unwrap())
     }
 }
@@ -123,8 +126,11 @@ impl<W: Writer> BzDecompressor<W> {
     }
 
     /// Unwrap the underlying writer, finishing the compression stream.
-    pub fn unwrap(mut self) -> IoResult<W> {
-        try!(self.do_write(&[], Action::Finish));
+    pub fn into_inner(mut self) -> Result<W, (BzDecompressor<W>, IoError)> {
+        match self.do_write(&[], Action::Finish) {
+            Ok(()) => {}
+            Err(e) => return Err((self, e)),
+        }
         Ok(self.w.take().unwrap())
     }
 }
@@ -159,7 +165,8 @@ mod tests {
         let mut c = BzCompressor::new(d, ::CompressionLevel::Default);
         c.write(b"12834").unwrap();
         c.write(("12345".repeat(100000)).as_bytes()).unwrap();
-        let data = c.unwrap().unwrap().unwrap().unwrap().unwrap();
+        let data = c.into_inner().ok().unwrap()
+                    .into_inner().ok().unwrap().into_inner();
         assert_eq!(data.slice(0, 5), b"12834");
         assert_eq!(data.len(), 500005);
         assert!(format!("12834{}", "12345".repeat(100000)).as_bytes() ==
