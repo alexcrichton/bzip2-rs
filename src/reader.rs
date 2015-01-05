@@ -1,6 +1,6 @@
 //! Reader-based compression/decompression streams
 
-use std::io::{mod, IoResult};
+use std::io::{self, IoResult};
 
 use ffi;
 use raw::{Stream, Action};

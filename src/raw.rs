@@ -13,7 +13,7 @@ pub struct Stream {
 }
 
 /// Kinds of streams
-#[deriving(Copy)]
+#[derive(Copy)]
 pub enum Kind {
     /// Streams used for compression
     Compress,
@@ -22,7 +22,7 @@ pub enum Kind {
 }
 
 /// Possible actions to take on compression.
-#[deriving(PartialEq, Eq, Copy)]
+#[derive(PartialEq, Eq, Copy)]
 pub enum Action {
     /// Normal compression.
     Run = ffi::BZ_RUN as int,

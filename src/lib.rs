@@ -28,6 +28,7 @@
 
 #![feature(unsafe_destructor)]
 #![deny(missing_docs)]
+#![cfg_attr(test, deny(warnings))]
 
 extern crate "bzip2-sys" as ffi;
 extern crate libc;
@@ -54,7 +55,7 @@ pub fn decompress(data: &[u8]) -> Vec<u8> {
 
 /// When compressing data, the compression level can be specified by a value in
 /// this enum.
-#[deriving(Copy)]
+#[derive(Copy)]
 pub enum CompressionLevel {
     /// Optimize for the best speed of encoding.
     Fastest = 1,
