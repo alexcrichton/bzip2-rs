@@ -12,6 +12,7 @@
 //! # Example
 //!
 //! ```
+//! # #![allow(unstable)]
 //! use std::io::BufReader;
 //! use bzip2::CompressionLevel;
 //! use bzip2::reader::{BzCompressor, BzDecompressor};
@@ -29,6 +30,7 @@
 #![feature(unsafe_destructor)]
 #![deny(missing_docs)]
 #![cfg_attr(test, deny(warnings))]
+#![cfg_attr(test, allow(unstable))]
 
 extern crate "bzip2-sys" as ffi;
 extern crate libc;

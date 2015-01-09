@@ -37,7 +37,7 @@ impl<W: Writer> BzCompressor<W> {
         while data.len() > 0 || action != Action::Run {
             let total_in = self.stream.total_in();
             let rc = self.stream.compress_vec(data, &mut self.buf, action);
-            data = data.slice_from((self.stream.total_in() - total_in) as uint);
+            data = data.slice_from((self.stream.total_in() - total_in) as usize);
 
             match rc {
                 ffi::BZ_STREAM_END => break,
@@ -103,7 +103,7 @@ impl<W: Writer> BzDecompressor<W> {
         while data.len() > 0 || (action == Action::Finish && !self.done) {
             let total_in = self.stream.total_in();
             let rc = self.stream.decompress_vec(data, &mut self.buf);
-            data = data.slice_from((self.stream.total_in() - total_in) as uint);
+            data = data.slice_from((self.stream.total_in() - total_in) as usize);
 
             if self.buf.len() == self.buf.capacity() {
                 try!(self.w.as_mut().unwrap().write(self.buf.as_slice()));

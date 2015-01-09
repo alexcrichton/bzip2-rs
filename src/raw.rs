@@ -25,11 +25,11 @@ pub enum Kind {
 #[derive(PartialEq, Eq, Copy)]
 pub enum Action {
     /// Normal compression.
-    Run = ffi::BZ_RUN as int,
+    Run = ffi::BZ_RUN as isize,
     /// Request that the current compression block is terminate.
-    Flush = ffi::BZ_FLUSH as int,
+    Flush = ffi::BZ_FLUSH as isize,
     /// Request that the compression stream be finalized.
-    Finish = ffi::BZ_FINISH as int,
+    Finish = ffi::BZ_FINISH as isize,
 }
 
 impl Stream {
@@ -41,7 +41,7 @@ impl Stream {
     /// maximum memory requirement drops to around 2300k). See
     pub fn new_decompress(small: bool) -> Stream {
         unsafe {
-            let mut raw = box mem::zeroed();
+            let mut raw = Box::new(mem::zeroed());
             assert_eq!(ffi::BZ2_bzDecompressInit(&mut *raw, 0, small as c_int), 0);
             Stream { raw: raw, kind: Kind::Decompress }
         }
@@ -67,9 +67,9 @@ impl Stream {
     ///
     /// Allowable values range from 0 to 250 inclusive. 0 is a special case,
     /// equivalent to using the default value of 30.
-    pub fn new_compress(lvl: ::CompressionLevel, work_factor: uint) -> Stream {
+    pub fn new_compress(lvl: ::CompressionLevel, work_factor: u32) -> Stream {
         unsafe {
-            let mut raw = box mem::zeroed();
+            let mut raw = Box::new(mem::zeroed());
             assert_eq!(ffi::BZ2_bzCompressInit(&mut *raw, lvl as c_int, 0,
                                                work_factor as c_int), 0);
             Stream { raw: raw, kind: Kind::Compress }
@@ -98,12 +98,12 @@ impl Stream {
         self.raw.next_in = input.as_ptr() as *mut _;
         self.raw.avail_out = (cap - len) as c_uint;
         self.raw.next_out = unsafe {
-            output.as_mut_ptr().offset(len as int) as *mut _
+            output.as_mut_ptr().offset(len as isize) as *mut _
         };
 
         let before = self.total_out();
         let rc = unsafe { ffi::BZ2_bzDecompress(&mut *self.raw) };
-        let diff = (self.total_out() - before) as uint;
+        let diff = (self.total_out() - before) as usize;
         unsafe { output.set_len(len + diff) }
         return rc;
     }
@@ -134,12 +134,12 @@ impl Stream {
         self.raw.next_in = input.as_ptr() as *mut _;
         self.raw.avail_out = (cap - len) as c_uint;
         self.raw.next_out = unsafe {
-            output.as_mut_ptr().offset(len as int) as *mut _
+            output.as_mut_ptr().offset(len as isize) as *mut _
         };
 
         let before = self.total_out();
         let rc = unsafe { ffi::BZ2_bzCompress(&mut *self.raw, action as c_int) };
-        let diff = (self.total_out() - before) as uint;
+        let diff = (self.total_out() - before) as usize;
         unsafe { output.set_len(len + diff) }
         return rc;
     }

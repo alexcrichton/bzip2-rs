@@ -11,7 +11,7 @@ pub struct BzCompressor<R> {
     stream: Stream,
     r: R,
     buf: Vec<u8>,
-    pos: uint,
+    pos: usize,
     done: bool,
 }
 
@@ -21,7 +21,7 @@ pub struct BzDecompressor<R> {
     stream: Stream,
     r: R,
     buf: Vec<u8>,
-    pos: uint,
+    pos: usize,
     done: bool,
 }
 
@@ -43,7 +43,7 @@ impl<R: Reader> BzCompressor<R> {
 }
 
 impl<R: Reader> Reader for BzCompressor<R> {
-    fn read(&mut self, buf: &mut [u8]) -> IoResult<uint> {
+    fn read(&mut self, buf: &mut [u8]) -> IoResult<usize> {
         if self.done { return Err(io::standard_error(io::EndOfFile)) }
 
         let mut read = 0;
@@ -66,8 +66,8 @@ impl<R: Reader> Reader for BzCompressor<R> {
             let rc = self.stream.compress(self.buf.slice_from(self.pos),
                                           buf.slice_from_mut(read),
                                           action);
-            self.pos += (self.stream.total_in() - before_in) as uint;
-            read += (self.stream.total_out() - before_out) as uint;
+            self.pos += (self.stream.total_in() - before_in) as usize;
+            read += (self.stream.total_out() - before_out) as usize;
 
             match rc {
                 ffi::BZ_STREAM_END if read > 0 => { self.done = true; break }
@@ -103,7 +103,7 @@ impl<R: Reader> BzDecompressor<R> {
 }
 
 impl<R: Reader> Reader for BzDecompressor<R> {
-    fn read(&mut self, buf: &mut [u8]) -> IoResult<uint> {
+    fn read(&mut self, buf: &mut [u8]) -> IoResult<usize> {
         if self.done { return Err(io::standard_error(io::EndOfFile)) }
 
         let mut read = 0;
@@ -123,8 +123,8 @@ impl<R: Reader> Reader for BzDecompressor<R> {
             let before_out = self.stream.total_out();
             let rc = self.stream.decompress(self.buf.slice_from(self.pos),
                                             buf.slice_from_mut(read));
-            self.pos += (self.stream.total_in() - before_in) as uint;
-            read += (self.stream.total_out() - before_out) as uint;
+            self.pos += (self.stream.total_in() - before_in) as usize;
+            read += (self.stream.total_out() - before_out) as usize;
 
             match rc {
                 ffi::BZ_STREAM_END if read > 0 => { self.done = true; break }
