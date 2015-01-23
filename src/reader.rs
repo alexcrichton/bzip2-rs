@@ -63,8 +63,8 @@ impl<R: Reader> Reader for BzCompressor<R> {
             let before_in = self.stream.total_in();
             let before_out = self.stream.total_out();
             let action = if eof {Action::Finish} else {Action::Run};
-            let rc = self.stream.compress(self.buf.slice_from(self.pos),
-                                          buf.slice_from_mut(read),
+            let rc = self.stream.compress(&self.buf[self.pos..],
+                                          &mut buf[read..],
                                           action);
             self.pos += (self.stream.total_in() - before_in) as usize;
             read += (self.stream.total_out() - before_out) as usize;
@@ -121,8 +121,8 @@ impl<R: Reader> Reader for BzDecompressor<R> {
 
             let before_in = self.stream.total_in();
             let before_out = self.stream.total_out();
-            let rc = self.stream.decompress(self.buf.slice_from(self.pos),
-                                            buf.slice_from_mut(read));
+            let rc = self.stream.decompress(&self.buf[self.pos..],
+                                            &mut buf[read..]);
             self.pos += (self.stream.total_in() - before_in) as usize;
             read += (self.stream.total_out() - before_out) as usize;
 
