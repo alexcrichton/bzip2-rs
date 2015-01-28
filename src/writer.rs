@@ -1,6 +1,6 @@
 //! Writer-based compression/decompression streams
 
-use std::io::{IoResult, IoError};
+use std::old_io::{IoResult, IoError};
 
 use ffi;
 use raw::{Stream, Action};
@@ -43,7 +43,7 @@ impl<W: Writer> BzCompressor<W> {
                 ffi::BZ_STREAM_END => break,
                 n if n >= 0 => {}
                 ffi::BZ_OUTBUFF_FULL => {
-                    try!(self.w.as_mut().unwrap().write(self.buf.as_slice()));
+                    try!(self.w.as_mut().unwrap().write_all(self.buf.as_slice()));
                     self.buf.truncate(0);
                 }
                 n => panic!("unexpected return: {}", n),
@@ -51,7 +51,7 @@ impl<W: Writer> BzCompressor<W> {
         }
 
         if action == Action::Finish && self.buf.len() > 0 {
-            try!(self.w.as_mut().unwrap().write(self.buf.as_slice()));
+            try!(self.w.as_mut().unwrap().write_all(self.buf.as_slice()));
         }
 
         Ok(())
@@ -68,7 +68,7 @@ impl<W: Writer> BzCompressor<W> {
 }
 
 impl<W: Writer> Writer for BzCompressor<W> {
-    fn write(&mut self, data: &[u8]) -> IoResult<()> {
+    fn write_all(&mut self, data: &[u8]) -> IoResult<()> {
         self.do_write(data, Action::Run)
     }
 
@@ -106,7 +106,7 @@ impl<W: Writer> BzDecompressor<W> {
             data = &data[(self.stream.total_in() - total_in) as usize..];
 
             if self.buf.len() == self.buf.capacity() {
-                try!(self.w.as_mut().unwrap().write(self.buf.as_slice()));
+                try!(self.w.as_mut().unwrap().write_all(self.buf.as_slice()));
                 self.buf.truncate(0);
             }
 
@@ -119,7 +119,7 @@ impl<W: Writer> BzDecompressor<W> {
         }
 
         if action == Action::Finish {
-            try!(self.w.as_mut().unwrap().write(self.buf.as_slice()));
+            try!(self.w.as_mut().unwrap().write_all(self.buf.as_slice()));
         }
 
         Ok(())
@@ -136,7 +136,7 @@ impl<W: Writer> BzDecompressor<W> {
 }
 
 impl<W: Writer> Writer for BzDecompressor<W> {
-    fn write(&mut self, data: &[u8]) -> IoResult<()> {
+    fn write_all(&mut self, data: &[u8]) -> IoResult<()> {
         self.do_write(data, Action::Run)
     }
 
@@ -156,7 +156,7 @@ impl<W: Writer> Drop for BzDecompressor<W> {
 
 #[cfg(test)]
 mod tests {
-    use std::io::MemWriter;
+    use std::old_io::MemWriter;
     use std::iter::repeat;
     use super::{BzCompressor, BzDecompressor};
 
@@ -164,9 +164,9 @@ mod tests {
     fn smoke() {
         let d = BzDecompressor::new(MemWriter::new());
         let mut c = BzCompressor::new(d, ::CompressionLevel::Default);
-        c.write(b"12834").unwrap();
+        c.write_all(b"12834").unwrap();
         let s = repeat("12345").take(100000).collect::<String>();
-        c.write(s.as_bytes()).unwrap();
+        c.write_all(s.as_bytes()).unwrap();
         let data = c.into_inner().ok().unwrap()
                     .into_inner().ok().unwrap().into_inner();
         assert_eq!(&data[0..5], b"12834");

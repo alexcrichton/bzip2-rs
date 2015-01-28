@@ -13,7 +13,7 @@
 //!
 //! ```
 //! # #![allow(unstable)]
-//! use std::io::BufReader;
+//! use std::old_io::BufReader;
 //! use bzip2::CompressionLevel;
 //! use bzip2::reader::{BzCompressor, BzDecompressor};
 //!
@@ -35,7 +35,7 @@
 extern crate "bzip2-sys" as ffi;
 extern crate libc;
 
-use std::io::MemWriter;
+use std::old_io::MemWriter;
 
 pub mod raw;
 pub mod writer;
@@ -44,14 +44,14 @@ pub mod reader;
 /// Compress a block of input data into a bzip2 encoded output vector.
 pub fn compress(data: &[u8], level: CompressionLevel) -> Vec<u8> {
     let mut wr = writer::BzCompressor::new(MemWriter::new(), level);
-    wr.write(data).unwrap();
+    wr.write_all(data).unwrap();
     wr.into_inner().ok().unwrap().into_inner()
 }
 
 /// Decompress a block of compressed input data into a raw output vector.
 pub fn decompress(data: &[u8]) -> Vec<u8> {
     let mut wr = writer::BzDecompressor::new(MemWriter::new());
-    wr.write(data).unwrap();
+    wr.write_all(data).unwrap();
     wr.into_inner().ok().unwrap().into_inner()
 }
 

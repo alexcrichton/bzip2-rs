@@ -1,6 +1,6 @@
 //! Reader-based compression/decompression streams
 
-use std::io::{self, IoResult};
+use std::old_io::{self, IoResult};
 
 use ffi;
 use raw::{Stream, Action};
@@ -44,7 +44,7 @@ impl<R: Reader> BzCompressor<R> {
 
 impl<R: Reader> Reader for BzCompressor<R> {
     fn read(&mut self, buf: &mut [u8]) -> IoResult<usize> {
-        if self.done { return Err(io::standard_error(io::EndOfFile)) }
+        if self.done { return Err(old_io::standard_error(old_io::EndOfFile)) }
 
         let mut read = 0;
         let cap = self.buf.capacity();
@@ -54,7 +54,7 @@ impl<R: Reader> Reader for BzCompressor<R> {
                 self.buf.truncate(0);
                 match self.r.push(cap, &mut self.buf) {
                     Ok(..) => {}
-                    Err(ref e) if e.kind == io::EndOfFile => eof = true,
+                    Err(ref e) if e.kind == old_io::EndOfFile => eof = true,
                     Err(e) => return Err(e),
                 }
                 self.pos = 0;
@@ -73,11 +73,11 @@ impl<R: Reader> Reader for BzCompressor<R> {
                 ffi::BZ_STREAM_END if read > 0 => { self.done = true; break }
                 ffi::BZ_OUTBUFF_FULL |
                 ffi::BZ_STREAM_END => {
-                    return Err(io::standard_error(io::EndOfFile))
+                    return Err(old_io::standard_error(old_io::EndOfFile))
                 }
 
                 n if n >= 0 => {}
-                _ => return Err(io::standard_error(io::InvalidInput)),
+                _ => return Err(old_io::standard_error(old_io::InvalidInput)),
             }
         }
 
@@ -104,7 +104,7 @@ impl<R: Reader> BzDecompressor<R> {
 
 impl<R: Reader> Reader for BzDecompressor<R> {
     fn read(&mut self, buf: &mut [u8]) -> IoResult<usize> {
-        if self.done { return Err(io::standard_error(io::EndOfFile)) }
+        if self.done { return Err(old_io::standard_error(old_io::EndOfFile)) }
 
         let mut read = 0;
         let cap = self.buf.capacity();
@@ -113,7 +113,7 @@ impl<R: Reader> Reader for BzDecompressor<R> {
                 self.buf.truncate(0);
                 match self.r.push(cap, &mut self.buf) {
                     Ok(..) => {}
-                    Err(ref e) if e.kind == io::EndOfFile => {}
+                    Err(ref e) if e.kind == old_io::EndOfFile => {}
                     Err(e) => return Err(e),
                 }
                 self.pos = 0;
@@ -130,11 +130,11 @@ impl<R: Reader> Reader for BzDecompressor<R> {
                 ffi::BZ_STREAM_END if read > 0 => { self.done = true; break }
                 ffi::BZ_OUTBUFF_FULL |
                 ffi::BZ_STREAM_END => {
-                    return Err(io::standard_error(io::EndOfFile))
+                    return Err(old_io::standard_error(old_io::EndOfFile))
                 }
 
                 n if n >= 0 => {}
-                _ => return Err(io::standard_error(io::InvalidInput)),
+                _ => return Err(old_io::standard_error(old_io::InvalidInput)),
             }
         }
 
@@ -144,7 +144,7 @@ impl<R: Reader> Reader for BzDecompressor<R> {
 
 #[cfg(test)]
 mod tests {
-    use std::io::{MemReader, MemWriter};
+    use std::old_io::{MemReader, MemWriter};
     use super::{BzCompressor, BzDecompressor};
     use writer as w;
 
@@ -154,7 +154,7 @@ mod tests {
         let mut c = BzCompressor::new(m, ::CompressionLevel::Default);
         let data = c.read_to_end().unwrap();
         let mut d = w::BzDecompressor::new(MemWriter::new());
-        d.write(data.as_slice()).unwrap();
+        d.write_all(data.as_slice()).unwrap();
         assert_eq!(d.into_inner().ok().unwrap().into_inner().as_slice(),
                    [1, 2, 3, 4, 5, 6, 7, 8].as_slice());
     }
