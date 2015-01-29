@@ -27,10 +27,9 @@
 //! assert_eq!(contents.as_slice(), "Hello, World!");
 //! ```
 
-#![feature(unsafe_destructor)]
+#![feature(unsafe_destructor, io, core)]
 #![deny(missing_docs)]
 #![cfg_attr(test, deny(warnings))]
-#![cfg_attr(test, allow(unstable))]
 
 extern crate "bzip2-sys" as ffi;
 extern crate libc;

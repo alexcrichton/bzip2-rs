@@ -1,3 +1,5 @@
+#![feature(collections, path)]
+
 extern crate gcc;
 
 use std::default::Default;
