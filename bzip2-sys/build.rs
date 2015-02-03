@@ -1,4 +1,4 @@
-#![feature(collections, path)]
+#![feature(path)]
 
 extern crate gcc;
 
