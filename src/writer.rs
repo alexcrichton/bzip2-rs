@@ -156,19 +156,18 @@ impl<W: Writer> Drop for BzDecompressor<W> {
 
 #[cfg(test)]
 mod tests {
-    use std::old_io::MemWriter;
     use std::iter::repeat;
     use super::{BzCompressor, BzDecompressor};
 
     #[test]
     fn smoke() {
-        let d = BzDecompressor::new(MemWriter::new());
+        let d = BzDecompressor::new(Vec::new());
         let mut c = BzCompressor::new(d, ::CompressionLevel::Default);
         c.write_all(b"12834").unwrap();
         let s = repeat("12345").take(100000).collect::<String>();
         c.write_all(s.as_bytes()).unwrap();
         let data = c.into_inner().ok().unwrap()
-                    .into_inner().ok().unwrap().into_inner();
+                    .into_inner().ok().unwrap();
         assert_eq!(&data[0..5], b"12834");
         assert_eq!(data.len(), 500005);
         assert!(format!("12834{}", s).as_bytes() == data.as_slice());
