@@ -27,7 +27,7 @@
 //! assert_eq!(contents.as_slice(), "Hello, World!");
 //! ```
 
-#![feature(unsafe_destructor, io, core)]
+#![feature(unsafe_destructor, old_io, core)]
 #![deny(missing_docs)]
 #![cfg_attr(test, deny(warnings))]
 
