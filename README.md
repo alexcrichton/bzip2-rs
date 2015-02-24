@@ -8,8 +8,8 @@ A streaming compression/decompression library for rust with bindings to libbz2.
 
 ```toml
 # Cargo.toml
-[dependencies.bzip2]
-git = "https://github.com/alexcrichton/bzip2-rs"
+[dependencies]
+bzip2 = "0.2"
 ```
 
 # License
