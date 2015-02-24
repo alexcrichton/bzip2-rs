@@ -22,7 +22,6 @@ pub const BZ_OUTBUFF_FULL: c_int = -8;
 pub const BZ_CONFIG_ERROR: c_int = -9;
 
 #[repr(C)]
-#[allow(missing_copy_implementations)]
 pub struct bz_stream {
     pub next_in: *mut c_char,
     pub avail_in: c_uint,

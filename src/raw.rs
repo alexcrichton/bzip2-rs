@@ -22,7 +22,7 @@ pub enum Kind {
 }
 
 /// Possible actions to take on compression.
-#[derive(PartialEq, Eq, Copy)]
+#[derive(PartialEq, Eq, Copy, Debug)]
 pub enum Action {
     /// Normal compression.
     Run = ffi::BZ_RUN as isize,
@@ -67,7 +67,7 @@ impl Stream {
     ///
     /// Allowable values range from 0 to 250 inclusive. 0 is a special case,
     /// equivalent to using the default value of 30.
-    pub fn new_compress(lvl: ::CompressionLevel, work_factor: u32) -> Stream {
+    pub fn new_compress(lvl: ::Compress, work_factor: u32) -> Stream {
         unsafe {
             let mut raw = Box::new(mem::zeroed());
             assert_eq!(ffi::BZ2_bzCompressInit(&mut *raw, lvl as c_int, 0,

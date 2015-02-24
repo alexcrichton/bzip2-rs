@@ -1,14 +1,14 @@
 //! Writer-based compression/decompression streams
 
-use std::io;
 use std::io::prelude::*;
+use std::io;
 
 use ffi;
 use raw::{Stream, Action};
 
 /// A compression stream which will have uncompressed data written to it and
 /// will write compressed data to an output stream.
-pub struct BzCompressor<W> {
+pub struct BzCompressor<W: Write> {
     stream: Stream,
     w: Option<W>,
     buf: Vec<u8>,
@@ -16,7 +16,7 @@ pub struct BzCompressor<W> {
 
 /// A compression stream which will have compressed data written to it and
 /// will write uncompressed data to an output stream.
-pub struct BzDecompressor<W> {
+pub struct BzDecompressor<W: Write> {
     stream: Stream,
     w: Option<W>,
     buf: Vec<u8>,
@@ -26,7 +26,7 @@ pub struct BzDecompressor<W> {
 impl<W: Write> BzCompressor<W> {
     /// Create a new compression stream which will compress at the given level
     /// to write compress output to the give output stream.
-    pub fn new(w: W, level: ::CompressionLevel) -> BzCompressor<W> {
+    pub fn new(w: W, level: ::Compress) -> BzCompressor<W> {
         BzCompressor {
             stream: Stream::new_compress(level, 30),
             w: Some(w),
@@ -34,34 +34,31 @@ impl<W: Write> BzCompressor<W> {
         }
     }
 
-    fn do_write(&mut self, mut data: &[u8], action: Action) -> io::Result<()> {
-        while data.len() > 0 || action != Action::Run {
-            let total_in = self.stream.total_in();
-            let rc = self.stream.compress_vec(data, &mut self.buf, action);
-            data = &data[(self.stream.total_in() - total_in) as usize..];
+    fn do_write(&mut self, data: &[u8], action: Action) -> io::Result<usize> {
+        if self.buf.len() > 0 {
+            try!(self.w.as_mut().unwrap().write_all(&self.buf));
+            self.buf.truncate(0);
+        }
 
-            match rc {
-                ffi::BZ_STREAM_END => break,
-                n if n >= 0 => {}
-                ffi::BZ_OUTBUFF_FULL => {
-                    try!(self.w.as_mut().unwrap().write_all(self.buf.as_slice()));
-                    self.buf.truncate(0);
-                }
-                n => panic!("unexpected return: {}", n),
-            }
+        let total_in = self.stream.total_in();
+        let rc = self.stream.compress_vec(data, &mut self.buf, action);
+        let written = (self.stream.total_in() - total_in) as usize;
+
+        if rc < 0 {
+            panic!("unexpected return: {}", rc);
         }
 
         if action == Action::Finish && self.buf.len() > 0 {
-            try!(self.w.as_mut().unwrap().write_all(self.buf.as_slice()));
+            try!(self.w.as_mut().unwrap().write_all(&self.buf));
+            self.buf.truncate(0);
         }
-
-        Ok(())
+        Ok(written)
     }
 
     /// Unwrap the underlying writer, finishing the compression stream.
     pub fn into_inner(mut self) -> Result<W, (BzCompressor<W>, io::Error)> {
         match self.do_write(&[], Action::Finish) {
-            Ok(()) => {}
+            Ok(_) => {}
             Err(e) => return Err((self, e)),
         }
         Ok(self.w.take().unwrap())
@@ -70,8 +67,7 @@ impl<W: Write> BzCompressor<W> {
 
 impl<W: Write> Write for BzCompressor<W> {
     fn write(&mut self, data: &[u8]) -> io::Result<usize> {
-        try!(self.do_write(data, Action::Run));
-        Ok(data.len())
+        self.do_write(data, Action::Run)
     }
 
     fn flush(&mut self) -> io::Result<()> {
@@ -101,36 +97,42 @@ impl<W: Write> BzDecompressor<W> {
         }
     }
 
-    fn do_write(&mut self, mut data: &[u8], action: Action) -> io::Result<()> {
-        while data.len() > 0 || (action == Action::Finish && !self.done) {
-            let total_in = self.stream.total_in();
-            let rc = self.stream.decompress_vec(data, &mut self.buf);
-            data = &data[(self.stream.total_in() - total_in) as usize..];
-
-            if self.buf.len() == self.buf.capacity() {
-                try!(self.w.as_mut().unwrap().write_all(self.buf.as_slice()));
+    fn do_write(&mut self, data: &[u8], action: Action) -> io::Result<usize> {
+        loop {
+            if self.buf.len() > 0 {
+                try!(self.w.as_mut().unwrap().write_all(&self.buf));
                 self.buf.truncate(0);
             }
 
+            let (written, rc) = if self.done {(0, 0)} else {
+                let total_in = self.stream.total_in();
+                let rc = self.stream.decompress_vec(data, &mut self.buf);
+                ((self.stream.total_in() - total_in) as usize, rc)
+            };
+
             match rc {
-                ffi::BZ_STREAM_END => { self.done = true; break }
+                ffi::BZ_STREAM_END => self.done = true,
                 n if n >= 0 => {}
-                ffi::BZ_OUTBUFF_FULL => {}
                 n => panic!("unexpected return: {}", n),
             }
-        }
 
-        if action == Action::Finish {
-            try!(self.w.as_mut().unwrap().write_all(self.buf.as_slice()));
-        }
+            match action {
+                Action::Run if written == 0 => continue,
+                Action::Finish if self.buf.len() > 0 => {
+                    try!(self.w.as_mut().unwrap().write_all(&self.buf));
+                    self.buf.truncate(0);
+                }
+                _ => {}
+            }
 
-        Ok(())
+            return Ok(written)
+        }
     }
 
     /// Unwrap the underlying writer, finishing the compression stream.
     pub fn into_inner(mut self) -> Result<W, (BzDecompressor<W>, io::Error)> {
         match self.do_write(&[], Action::Finish) {
-            Ok(()) => {}
+            Ok(_) => {}
             Err(e) => return Err((self, e)),
         }
         Ok(self.w.take().unwrap())
@@ -139,8 +141,7 @@ impl<W: Write> BzDecompressor<W> {
 
 impl<W: Write> Write for BzDecompressor<W> {
     fn write(&mut self, data: &[u8]) -> io::Result<usize> {
-        try!(self.do_write(data, Action::Run));
-        Ok(data.len())
+        self.do_write(data, Action::Run)
     }
 
     fn flush(&mut self) -> io::Result<()> {
@@ -166,7 +167,7 @@ mod tests {
     #[test]
     fn smoke() {
         let d = BzDecompressor::new(Vec::new());
-        let mut c = BzCompressor::new(d, ::CompressionLevel::Default);
+        let mut c = BzCompressor::new(d, ::Compress::Default);
         c.write_all(b"12834").unwrap();
         let s = repeat("12345").take(100000).collect::<String>();
         c.write_all(s.as_bytes()).unwrap();
@@ -174,6 +175,6 @@ mod tests {
                     .into_inner().ok().unwrap();
         assert_eq!(&data[0..5], b"12834");
         assert_eq!(data.len(), 500005);
-        assert!(format!("12834{}", s).as_bytes() == data.as_slice());
+        assert!(format!("12834{}", s).as_bytes() == data);
     }
 }
