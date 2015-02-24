@@ -1,6 +1,7 @@
 //! Writer-based compression/decompression streams
 
-use std::old_io::{IoResult, IoError};
+use std::io;
+use std::io::prelude::*;
 
 use ffi;
 use raw::{Stream, Action};
@@ -22,7 +23,7 @@ pub struct BzDecompressor<W> {
     done: bool,
 }
 
-impl<W: Writer> BzCompressor<W> {
+impl<W: Write> BzCompressor<W> {
     /// Create a new compression stream which will compress at the given level
     /// to write compress output to the give output stream.
     pub fn new(w: W, level: ::CompressionLevel) -> BzCompressor<W> {
@@ -33,7 +34,7 @@ impl<W: Writer> BzCompressor<W> {
         }
     }
 
-    fn do_write(&mut self, mut data: &[u8], action: Action) -> IoResult<()> {
+    fn do_write(&mut self, mut data: &[u8], action: Action) -> io::Result<()> {
         while data.len() > 0 || action != Action::Run {
             let total_in = self.stream.total_in();
             let rc = self.stream.compress_vec(data, &mut self.buf, action);
@@ -58,7 +59,7 @@ impl<W: Writer> BzCompressor<W> {
     }
 
     /// Unwrap the underlying writer, finishing the compression stream.
-    pub fn into_inner(mut self) -> Result<W, (BzCompressor<W>, IoError)> {
+    pub fn into_inner(mut self) -> Result<W, (BzCompressor<W>, io::Error)> {
         match self.do_write(&[], Action::Finish) {
             Ok(()) => {}
             Err(e) => return Err((self, e)),
@@ -67,19 +68,20 @@ impl<W: Writer> BzCompressor<W> {
     }
 }
 
-impl<W: Writer> Writer for BzCompressor<W> {
-    fn write_all(&mut self, data: &[u8]) -> IoResult<()> {
-        self.do_write(data, Action::Run)
+impl<W: Write> Write for BzCompressor<W> {
+    fn write(&mut self, data: &[u8]) -> io::Result<usize> {
+        try!(self.do_write(data, Action::Run));
+        Ok(data.len())
     }
 
-    fn flush(&mut self) -> IoResult<()> {
+    fn flush(&mut self) -> io::Result<()> {
         try!(self.do_write(&[], Action::Flush));
         self.w.as_mut().unwrap().flush()
     }
 }
 
 #[unsafe_destructor]
-impl<W: Writer> Drop for BzCompressor<W> {
+impl<W: Write> Drop for BzCompressor<W> {
     fn drop(&mut self) {
         if self.w.is_some() {
             let _ = self.do_write(&[], Action::Finish);
@@ -87,7 +89,7 @@ impl<W: Writer> Drop for BzCompressor<W> {
     }
 }
 
-impl<W: Writer> BzDecompressor<W> {
+impl<W: Write> BzDecompressor<W> {
     /// Create a new compression stream which will compress at the given level
     /// to write compress output to the give output stream.
     pub fn new(w: W) -> BzDecompressor<W> {
@@ -99,7 +101,7 @@ impl<W: Writer> BzDecompressor<W> {
         }
     }
 
-    fn do_write(&mut self, mut data: &[u8], action: Action) -> IoResult<()> {
+    fn do_write(&mut self, mut data: &[u8], action: Action) -> io::Result<()> {
         while data.len() > 0 || (action == Action::Finish && !self.done) {
             let total_in = self.stream.total_in();
             let rc = self.stream.decompress_vec(data, &mut self.buf);
@@ -126,7 +128,7 @@ impl<W: Writer> BzDecompressor<W> {
     }
 
     /// Unwrap the underlying writer, finishing the compression stream.
-    pub fn into_inner(mut self) -> Result<W, (BzDecompressor<W>, IoError)> {
+    pub fn into_inner(mut self) -> Result<W, (BzDecompressor<W>, io::Error)> {
         match self.do_write(&[], Action::Finish) {
             Ok(()) => {}
             Err(e) => return Err((self, e)),
@@ -135,18 +137,19 @@ impl<W: Writer> BzDecompressor<W> {
     }
 }
 
-impl<W: Writer> Writer for BzDecompressor<W> {
-    fn write_all(&mut self, data: &[u8]) -> IoResult<()> {
-        self.do_write(data, Action::Run)
+impl<W: Write> Write for BzDecompressor<W> {
+    fn write(&mut self, data: &[u8]) -> io::Result<usize> {
+        try!(self.do_write(data, Action::Run));
+        Ok(data.len())
     }
 
-    fn flush(&mut self) -> IoResult<()> {
+    fn flush(&mut self) -> io::Result<()> {
         self.w.as_mut().unwrap().flush()
     }
 }
 
 #[unsafe_destructor]
-impl<W: Writer> Drop for BzDecompressor<W> {
+impl<W: Write> Drop for BzDecompressor<W> {
     fn drop(&mut self) {
         if self.w.is_some() {
             let _ = self.do_write(&[], Action::Finish);
@@ -156,6 +159,7 @@ impl<W: Writer> Drop for BzDecompressor<W> {
 
 #[cfg(test)]
 mod tests {
+    use std::io::prelude::*;
     use std::iter::repeat;
     use super::{BzCompressor, BzDecompressor};
 

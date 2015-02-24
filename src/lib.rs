@@ -13,21 +13,22 @@
 //!
 //! ```
 //! # #![allow(unstable)]
-//! use std::old_io::BufReader;
+//! use std::io::prelude::*;
 //! use bzip2::CompressionLevel;
 //! use bzip2::reader::{BzCompressor, BzDecompressor};
 //!
 //! // Round trip some bytes from a byte source, into a compressor, into a
 //! // decompressor, and finally into a vector.
-//! let data = BufReader::new(b"Hello, World!");
+//! let data = b"Hello, World!";
 //! let compressor = BzCompressor::new(data, CompressionLevel::Smallest);
 //! let mut decompressor = BzDecompressor::new(compressor);
 //!
-//! let contents = decompressor.read_to_string().unwrap();
+//! let mut contents = String::new();
+//! decompressor.read_to_string(&mut contents).unwrap();
 //! assert_eq!(contents.as_slice(), "Hello, World!");
 //! ```
 
-#![feature(unsafe_destructor, old_io, core)]
+#![feature(unsafe_destructor, io, core)]
 #![deny(missing_docs)]
 #![cfg_attr(test, deny(warnings))]
 
@@ -37,6 +38,8 @@ extern crate libc;
 pub mod raw;
 pub mod writer;
 pub mod reader;
+
+use std::io::prelude::*;
 
 /// Compress a block of input data into a bzip2 encoded output vector.
 pub fn compress(data: &[u8], level: CompressionLevel) -> Vec<u8> {
