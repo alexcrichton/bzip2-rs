@@ -45,7 +45,6 @@ impl<R: Read> BzCompressor<R> {
 
 impl<R: Read> Read for BzCompressor<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        println!("compress");
         self.0.read(|stream, input, eof| {
             let action = if eof {Action::Finish} else {Action::Run};
             stream.compress(input, buf, action)
@@ -73,7 +72,6 @@ impl<R: Read> BzDecompressor<R> {
 
 impl<R: Read> Read for BzDecompressor<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        println!("decompress");
         self.0.read(|stream, input, _eof| {
             stream.decompress(input, buf)
         })
@@ -90,7 +88,6 @@ impl<R: Read> Inner<R> {
             let mut eof = false;
             if self.pos == self.cap {
                 self.cap = try!(self.r.read(&mut self.buf));
-                println!("read: {}", self.cap);
                 self.pos = 0;
                 eof = self.cap == 0;
             }
