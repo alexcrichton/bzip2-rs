@@ -142,5 +142,14 @@ mod tests {
         d.read_to_end(&mut data).unwrap();
         assert_eq!(data, [1, 2, 3, 4, 5, 6, 7, 8]);
     }
-}
 
+    #[test]
+    fn smoke3() {
+        let m = vec![3u8; 128 * 1024 + 1];
+        let c = BzCompressor::new(&m[..], ::Compress::Default);
+        let mut d = BzDecompressor::new(c);
+        let mut data = vec![];
+        d.read_to_end(&mut data).unwrap();
+        assert!(data == &m[..]);
+    }
+}
