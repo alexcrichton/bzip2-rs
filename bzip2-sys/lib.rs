@@ -1,3 +1,5 @@
+#![doc(html_root_url = "http://alexcrichton.com/bzip2-rs")]
+
 extern crate libc;
 
 use libc::{c_int, c_uint, c_void, c_char};
