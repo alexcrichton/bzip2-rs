@@ -19,7 +19,7 @@
 //!
 //! // Round trip some bytes from a byte source, into a compressor, into a
 //! // decompressor, and finally into a vector.
-//! let data = b"Hello, World!";
+//! let data = "Hello, World!".as_bytes();
 //! let compressor = BzCompressor::new(data, Compress::Best);
 //! let mut decompressor = BzDecompressor::new(compressor);
 //!
