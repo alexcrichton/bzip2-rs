@@ -33,7 +33,7 @@
 #![cfg_attr(test, deny(warnings))]
 #![doc(html_root_url = "http://alexcrichton.com/bzip2-rs")]
 
-extern crate "bzip2-sys" as ffi;
+extern crate bzip2_sys as ffi;
 extern crate libc;
 
 pub mod raw;
