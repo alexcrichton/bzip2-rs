@@ -76,7 +76,6 @@ impl<W: Write> Write for BzCompressor<W> {
     }
 }
 
-#[unsafe_destructor]
 impl<W: Write> Drop for BzCompressor<W> {
     fn drop(&mut self) {
         if self.w.is_some() {
@@ -149,7 +148,6 @@ impl<W: Write> Write for BzDecompressor<W> {
     }
 }
 
-#[unsafe_destructor]
 impl<W: Write> Drop for BzDecompressor<W> {
     fn drop(&mut self) {
         if self.w.is_some() {
