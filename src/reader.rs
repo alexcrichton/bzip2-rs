@@ -104,7 +104,7 @@ impl<R: Read> Inner<R> {
                 n if n >= 0 => {}
 
                 _ => return Err(io::Error::new(io::ErrorKind::InvalidInput,
-                                               "invalid input", None)),
+                                               "invalid input")),
             }
             if read == 0 && !eof { continue }
             return Ok(read)

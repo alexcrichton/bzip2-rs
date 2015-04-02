@@ -28,7 +28,6 @@
 //! assert_eq!(contents, "Hello, World!");
 //! ```
 
-#![feature(io)]
 #![deny(missing_docs)]
 #![cfg_attr(test, deny(warnings))]
 #![doc(html_root_url = "http://alexcrichton.com/bzip2-rs")]
