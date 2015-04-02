@@ -173,6 +173,6 @@ mod tests {
                     .into_inner().ok().unwrap();
         assert_eq!(&data[0..5], b"12834");
         assert_eq!(data.len(), 500005);
-        assert!(format!("12834{}", s).as_bytes() == data);
+        assert!(format!("12834{}", s).as_bytes() == &*data);
     }
 }
