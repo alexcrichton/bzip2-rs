@@ -57,7 +57,7 @@ pub fn decompress(data: &[u8]) -> Vec<u8> {
 
 /// When compressing data, the compression level can be specified by a value in
 /// this enum.
-#[derive(Copy)]
+#[derive(Copy, Clone)]
 pub enum Compress {
     /// Optimize for the best speed of encoding.
     Fastest = 1,
