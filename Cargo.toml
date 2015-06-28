@@ -16,7 +16,4 @@ Reader/Writer streams.
 
 [dependencies]
 libc = "0.1"
-
-[dependencies.bzip2-sys]
-version = "0.1"
-path = "bzip2-sys"
+bzip2-sys = { version = "0.1", path = "bzip2-sys" }
