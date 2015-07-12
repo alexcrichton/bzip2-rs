@@ -1,6 +1,7 @@
 # bzip2
 
 [![Build Status](https://travis-ci.org/alexcrichton/bzip2-rs.svg?branch=master)](https://travis-ci.org/alexcrichton/bzip2-rs)
+[![Build status](https://ci.appveyor.com/api/projects/status/joowqvvwfhxgdw5x?svg=true)](https://ci.appveyor.com/project/alexcrichton/bzip2-rs)
 
 [Documentation](http://alexcrichton.com/bzip2-rs/bzip2/index.html)
 
