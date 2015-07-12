@@ -42,18 +42,31 @@ pub struct bz_stream {
     pub opaque: *mut c_void,
 }
 
-extern {
+macro_rules! abi_compat {
+    ($(pub fn $name:ident($($arg:ident: $t:ty),*) -> $ret:ty,)*) => {
+        #[cfg(windows)]
+        extern "system" {
+            $(pub fn $name($($arg: $t),*) -> $ret;)*
+        }
+        #[cfg(unix)]
+        extern {
+            $(pub fn $name($($arg: $t),*) -> $ret;)*
+        }
+    }
+}
+
+abi_compat! {
     pub fn BZ2_bzCompressInit(stream: *mut bz_stream,
                               blockSize100k: c_int,
                               verbosity: c_int,
-                              workFactor: c_int) -> c_int;
-    pub fn BZ2_bzCompress(stream: *mut bz_stream, action: c_int) -> c_int;
-    pub fn BZ2_bzCompressEnd(stream: *mut bz_stream) -> c_int;
+                              workFactor: c_int) -> c_int,
+    pub fn BZ2_bzCompress(stream: *mut bz_stream, action: c_int) -> c_int,
+    pub fn BZ2_bzCompressEnd(stream: *mut bz_stream) -> c_int,
     pub fn BZ2_bzDecompressInit(stream: *mut bz_stream,
                                 verbosity: c_int,
-                                small: c_int) -> c_int;
-    pub fn BZ2_bzDecompress(stream: *mut bz_stream) -> c_int;
-    pub fn BZ2_bzDecompressEnd(stream: *mut bz_stream) -> c_int;
+                                small: c_int) -> c_int,
+    pub fn BZ2_bzDecompress(stream: *mut bz_stream) -> c_int,
+    pub fn BZ2_bzDecompressEnd(stream: *mut bz_stream) -> c_int,
 }
 
 #[no_mangle]
