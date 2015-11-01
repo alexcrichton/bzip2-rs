@@ -45,7 +45,7 @@ impl<R: Read> BzCompressor<R> {
 
 impl<R: Read> Read for BzCompressor<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        self.0.read(|stream, input, eof| {
+        self.0.read(buf.len(), |stream, input, eof| {
             let action = if eof {Action::Finish} else {Action::Run};
             stream.compress(input, buf, action)
         })
@@ -72,17 +72,19 @@ impl<R: Read> BzDecompressor<R> {
 
 impl<R: Read> Read for BzDecompressor<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        self.0.read(|stream, input, _eof| {
+        self.0.read(buf.len(), |stream, input, _eof| {
             stream.decompress(input, buf)
         })
     }
 }
 
 impl<R: Read> Inner<R> {
-    fn read<F>(&mut self, mut f: F) -> io::Result<usize>
+    fn read<F>(&mut self, target: usize, mut f: F) -> io::Result<usize>
         where F: FnMut(&mut Stream, &[u8], bool) -> c_int
     {
         if self.done { return Ok(0) }
+
+        let mut read = 0;
 
         loop {
             let mut eof = false;
@@ -95,7 +97,7 @@ impl<R: Read> Inner<R> {
             let before_out = self.stream.total_out();
             let rc = f(&mut self.stream, &self.buf[self.pos..self.cap], eof);
             self.pos += (self.stream.total_in() - before_in) as usize;
-            let read = (self.stream.total_out() - before_out) as usize;
+            read += (self.stream.total_out() - before_out) as usize;
 
             match rc {
                 ffi::BZ_STREAM_END => { self.done = true; eof = true; }
@@ -105,7 +107,7 @@ impl<R: Read> Inner<R> {
                 _ => return Err(io::Error::new(io::ErrorKind::InvalidInput,
                                                "invalid input")),
             }
-            if read == 0 && !eof { continue }
+            if target - read > 0 && !eof { continue }
             return Ok(read)
         }
     }
@@ -173,6 +175,19 @@ mod tests {
     #[test]
     fn zero_length_read_at_eof() {
         let m = Vec::new();
+        let mut c = BzCompressor::new(&m[..], ::Compress::Default);
+
+        let mut result = Vec::new();
+        c.read_to_end(&mut result).unwrap();
+
+        let mut d = BzDecompressor::new(&result[..]);
+        let mut data = Vec::new();
+        assert!(d.read(&mut data).unwrap() == 0);
+    }
+
+    #[test]
+    fn zero_length_read_with_data() {
+        let m = vec![3u8; 128 * 1024 + 1];
         let mut c = BzCompressor::new(&m[..], ::Compress::Default);
 
         let mut result = Vec::new();
