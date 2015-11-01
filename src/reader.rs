@@ -45,9 +45,9 @@ impl<R: Read> BzCompressor<R> {
 
 impl<R: Read> Read for BzCompressor<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        self.0.read(buf.len(), |stream, input, eof| {
+        self.0.read(buf.len(), |stream, input, offset, eof| {
             let action = if eof {Action::Finish} else {Action::Run};
-            stream.compress(input, buf, action)
+            stream.compress(input, &mut buf[offset..], action)
         })
     }
 }
@@ -72,15 +72,15 @@ impl<R: Read> BzDecompressor<R> {
 
 impl<R: Read> Read for BzDecompressor<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        self.0.read(buf.len(), |stream, input, _eof| {
-            stream.decompress(input, buf)
+        self.0.read(buf.len(), |stream, input, offset, _eof| {
+            stream.decompress(input, &mut buf[offset..])
         })
     }
 }
 
 impl<R: Read> Inner<R> {
     fn read<F>(&mut self, target: usize, mut f: F) -> io::Result<usize>
-        where F: FnMut(&mut Stream, &[u8], bool) -> c_int
+        where F: FnMut(&mut Stream, &[u8], usize, bool) -> c_int
     {
         if self.done { return Ok(0) }
 
@@ -95,7 +95,7 @@ impl<R: Read> Inner<R> {
             }
             let before_in = self.stream.total_in();
             let before_out = self.stream.total_out();
-            let rc = f(&mut self.stream, &self.buf[self.pos..self.cap], eof);
+            let rc = f(&mut self.stream, &self.buf[self.pos..self.cap], read, eof);
             self.pos += (self.stream.total_in() - before_in) as usize;
             read += (self.stream.total_out() - before_out) as usize;
 
