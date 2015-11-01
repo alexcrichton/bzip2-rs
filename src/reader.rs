@@ -98,9 +98,8 @@ impl<R: Read> Inner<R> {
             let read = (self.stream.total_out() - before_out) as usize;
 
             match rc {
-                ffi::BZ_STREAM_END if read > 0 => self.done = true,
-                ffi::BZ_OUTBUFF_FULL |
-                ffi::BZ_STREAM_END => {}
+                ffi::BZ_STREAM_END => { self.done = true; eof = true; }
+                ffi::BZ_OUTBUFF_FULL => {}
                 n if n >= 0 => {}
 
                 _ => return Err(io::Error::new(io::ErrorKind::InvalidInput,
@@ -117,6 +116,7 @@ mod tests {
     use std::io::prelude::*;
     use super::{BzCompressor, BzDecompressor};
     use writer as w;
+    use rand::{thread_rng, Rng};
 
     #[test]
     fn smoke() {
@@ -148,5 +148,38 @@ mod tests {
         let mut data = vec![];
         d.read_to_end(&mut data).unwrap();
         assert!(data == &m[..]);
+    }
+
+    #[test]
+    fn self_terminating() {
+        let m = vec![3u8; 128 * 1024 + 1];
+        let mut c = BzCompressor::new(&m[..], ::Compress::Default);
+
+        let mut result = Vec::new();
+        c.read_to_end(&mut result).unwrap();
+
+        let v = thread_rng().gen_iter::<u8>().take(1024).collect::<Vec<_>>();
+        for _ in 0..200 {
+            result.extend(v.iter().map(|x| *x));
+        }
+
+        let mut d = BzDecompressor::new(&result[..]);
+        let mut data = Vec::with_capacity(m.len());
+        unsafe { data.set_len(m.len()); }
+        assert!(d.read(&mut data).unwrap() == m.len());
+        assert!(data == &m[..]);
+    }
+
+    #[test]
+    fn zero_length_read_at_eof() {
+        let m = Vec::new();
+        let mut c = BzCompressor::new(&m[..], ::Compress::Default);
+
+        let mut result = Vec::new();
+        c.read_to_end(&mut result).unwrap();
+
+        let mut d = BzDecompressor::new(&result[..]);
+        let mut data = Vec::new();
+        assert!(d.read(&mut data).unwrap() == 0);
     }
 }

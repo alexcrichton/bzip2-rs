@@ -34,6 +34,8 @@
 
 extern crate bzip2_sys as ffi;
 extern crate libc;
+#[cfg(test)]
+extern crate rand;
 
 pub mod raw;
 pub mod writer;
