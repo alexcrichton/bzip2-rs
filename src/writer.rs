@@ -63,6 +63,16 @@ impl<W: Write> BzCompressor<W> {
         }
         Ok(self.w.take().unwrap())
     }
+
+    /// Returns the number of bytes produced by the compressor
+    pub fn total_out(&self) -> u64 {
+        self.stream.total_out()
+    }
+
+    /// Returns the number of bytes consumed by the compressor
+    pub fn total_in(&self) -> u64 {
+        self.stream.total_in()
+    }
 }
 
 impl<W: Write> Write for BzCompressor<W> {
