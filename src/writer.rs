@@ -77,7 +77,11 @@ impl<W: Write> BzCompressor<W> {
 
 impl<W: Write> Write for BzCompressor<W> {
     fn write(&mut self, data: &[u8]) -> io::Result<usize> {
-        self.do_write(data, Action::Run)
+        if data.len() != 0 {
+            self.do_write(data, Action::Run)
+        } else {
+            Ok(0)
+        }
     }
 
     fn flush(&mut self) -> io::Result<()> {
@@ -184,5 +188,15 @@ mod tests {
         assert_eq!(&data[0..5], b"12834");
         assert_eq!(data.len(), 500005);
         assert!(format!("12834{}", s).as_bytes() == &*data);
+    }
+
+    #[test]
+    fn write_empty() {
+        let d = BzDecompressor::new(Vec::new());
+        let mut c = BzCompressor::new(d, ::Compress::Default);
+        c.write(b"").unwrap();
+        let data = c.into_inner().ok().unwrap()
+                    .into_inner().ok().unwrap();
+        assert_eq!(&data[..], b"");
     }
 }
