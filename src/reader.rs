@@ -2,7 +2,6 @@
 
 use std::io::prelude::*;
 use std::io;
-use std::iter::repeat;
 use libc::c_int;
 
 use ffi;
@@ -32,7 +31,7 @@ impl<R: Read> BzCompressor<R> {
         BzCompressor(Inner {
             stream: Stream::new_compress(level, 30),
             r: r,
-            buf: repeat(0).take(32 * 1024).collect(),
+            buf: vec![0; 32 * 1024],
             cap: 0,
             pos: 0,
             done: false,
@@ -78,7 +77,7 @@ impl<R: Read> BzDecompressor<R> {
         BzDecompressor(Inner {
             stream: Stream::new_decompress(false),
             r: r,
-            buf: repeat(0).take(32 * 1024).collect::<Vec<_>>(),
+            buf: vec![0; 32 * 1024],
             cap: 0,
             done: false,
             pos: 0,
