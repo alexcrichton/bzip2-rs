@@ -82,11 +82,7 @@ impl<W: Write> BzCompressor<W> {
 
 impl<W: Write> Write for BzCompressor<W> {
     fn write(&mut self, data: &[u8]) -> io::Result<usize> {
-        if data.len() != 0 {
-            self.do_write(data, Action::Run)
-        } else {
-            Ok(0)
-        }
+        self.do_write(data, Action::Run)
     }
 
     fn flush(&mut self) -> io::Result<()> {

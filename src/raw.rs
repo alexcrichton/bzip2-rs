@@ -114,6 +114,12 @@ impl Stream {
     /// given must be one of Run, Flush or Finish.
     pub fn compress(&mut self, input: &[u8], output: &mut [u8],
                     action: Action) -> c_int {
+        // apparently 0-length compression requests which don't actually make
+        // any progress are returned as BZ_PARAM_ERROR, which we don't want, to
+        // just translate to a success here.
+        if input.len() == 0 && action == Action::Run {
+            return 0
+        }
         self.raw.next_in = input.as_ptr() as *mut _;
         self.raw.avail_in = input.len() as c_uint;
         self.raw.next_out = output.as_mut_ptr() as *mut _;
@@ -128,6 +134,10 @@ impl Stream {
     /// adjusted appropriately.
     pub fn compress_vec(&mut self, input: &[u8], output: &mut Vec<u8>,
                         action: Action) -> c_int {
+        // see comment above.
+        if input.len() == 0 && action == Action::Run {
+            return 0
+        }
         let cap = output.capacity();
         let len = output.len();
         self.raw.avail_in = input.len() as c_uint;
