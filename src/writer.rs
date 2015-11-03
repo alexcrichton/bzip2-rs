@@ -65,11 +65,16 @@ impl<W: Write> BzCompressor<W> {
     }
 
     /// Returns the number of bytes produced by the compressor
+    ///
+    /// Note that, due to buffering, this only bears any relation to
+    /// `total_in()` after a call to `flush()`.  At that point,
+    /// `total_out() / total_in()` is the compression ratio.
     pub fn total_out(&self) -> u64 {
         self.stream.total_out()
     }
 
     /// Returns the number of bytes consumed by the compressor
+    /// (e.g. the number of bytes written to this stream.)
     pub fn total_in(&self) -> u64 {
         self.stream.total_in()
     }
@@ -149,6 +154,21 @@ impl<W: Write> BzDecompressor<W> {
             Err(e) => return Err((self, e)),
         }
         Ok(self.w.take().unwrap())
+    }
+
+    /// Returns the number of bytes produced by the decompressor
+    ///
+    /// Note that, due to buffering, this only bears any relation to
+    /// `total_in()` after a call to `flush()`.  At that point,
+    /// `total_in() / total_out()` is the compression ratio.
+    pub fn total_out(&self) -> u64 {
+        self.stream.total_out()
+    }
+
+    /// Returns the number of bytes consumed by the decompressor
+    /// (e.g. the number of bytes written to this stream.)
+    pub fn total_in(&self) -> u64 {
+        self.stream.total_in()
     }
 }
 

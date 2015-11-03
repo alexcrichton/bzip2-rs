@@ -41,6 +41,25 @@ impl<R: Read> BzCompressor<R> {
 
     /// Unwrap the underlying writer, finishing the compression stream.
     pub fn into_inner(self) -> R { self.0.r }
+
+    /// Returns the number of bytes produced by the compressor
+    /// (e.g. the number of bytes read from this stream)
+    ///
+    /// Note that, due to buffering, this only bears any relation to
+    /// total_in() when the compressor chooses to flush its data
+    /// (unfortunately, this won't happen this won't happen in general
+    /// at the end of the stream, because the compressor doesn't know
+    /// if there's more data to come).  At that point,
+    /// `total_out() / total_in()` would be the compression ratio.
+    pub fn total_out(&self) -> u64 {
+        self.0.stream.total_out()
+    }
+
+    /// Returns the number of bytes consumed by the compressor
+    /// (e.g. the number of bytes read from the underlying stream)
+    pub fn total_in(&self) -> u64 {
+        self.0.stream.total_in()
+    }
 }
 
 impl<R: Read> Read for BzCompressor<R> {
@@ -68,6 +87,23 @@ impl<R: Read> BzDecompressor<R> {
 
     /// Unwrap the underlying writer, finishing the compression stream.
     pub fn into_inner(self) -> R { self.0.r }
+
+    /// Returns the number of bytes produced by the decompressor
+    /// (e.g. the number of bytes read from this stream)
+    ///
+    /// Note that, due to buffering, this only bears any relation to
+    /// total_in() when the decompressor reaches a sync point
+    /// (e.g. where the original compressed stream was flushed).
+    /// At that point, `total_in() / total_out()` is the compression ratio.
+    pub fn total_out(&self) -> u64 {
+        self.0.stream.total_out()
+    }
+
+    /// Returns the number of bytes consumed by the decompressor
+    /// (e.g. the number of bytes read from the underlying stream)
+    pub fn total_in(&self) -> u64 {
+        self.0.stream.total_in()
+    }
 }
 
 impl<R: Read> Read for BzDecompressor<R> {
