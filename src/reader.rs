@@ -63,9 +63,9 @@ impl<R: Read> BzCompressor<R> {
 
 impl<R: Read> Read for BzCompressor<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        self.0.read(buf.len(), |stream, input, offset, eof| {
+        self.0.read(|stream, input, eof| {
             let action = if eof {Action::Finish} else {Action::Run};
-            stream.compress(input, &mut buf[offset..], action)
+            stream.compress(input, buf, action)
         })
     }
 }
@@ -107,19 +107,22 @@ impl<R: Read> BzDecompressor<R> {
 
 impl<R: Read> Read for BzDecompressor<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        self.0.read(buf.len(), |stream, input, offset, _eof| {
-            stream.decompress(input, &mut buf[offset..])
+        // Zero-length reads currently aren't handled well (get turned into an
+        // infinite loop), so just punt those upstream.
+        if buf.len() == 0 {
+            return Ok(0)
+        }
+        self.0.read(|stream, input, _eof| {
+            stream.decompress(input, buf)
         })
     }
 }
 
 impl<R: Read> Inner<R> {
-    fn read<F>(&mut self, target: usize, mut f: F) -> io::Result<usize>
-        where F: FnMut(&mut Stream, &[u8], usize, bool) -> c_int
+    fn read<F>(&mut self, mut f: F) -> io::Result<usize>
+        where F: FnMut(&mut Stream, &[u8], bool) -> c_int
     {
         if self.done { return Ok(0) }
-
-        let mut read = 0;
 
         loop {
             let mut eof = false;
@@ -130,19 +133,20 @@ impl<R: Read> Inner<R> {
             }
             let before_in = self.stream.total_in();
             let before_out = self.stream.total_out();
-            let rc = f(&mut self.stream, &self.buf[self.pos..self.cap], read, eof);
+            let rc = f(&mut self.stream, &self.buf[self.pos..self.cap], eof);
             self.pos += (self.stream.total_in() - before_in) as usize;
-            read += (self.stream.total_out() - before_out) as usize;
+            let read = (self.stream.total_out() - before_out) as usize;
 
             match rc {
-                ffi::BZ_STREAM_END => { self.done = true; eof = true; }
-                ffi::BZ_OUTBUFF_FULL => {}
+                ffi::BZ_STREAM_END if read > 0 => self.done = true,
+                ffi::BZ_OUTBUFF_FULL |
+                ffi::BZ_STREAM_END => {}
                 n if n >= 0 => {}
 
                 _ => return Err(io::Error::new(io::ErrorKind::InvalidInput,
                                                "invalid input")),
             }
-            if target > read && !eof { continue }
+            if read == 0 && !eof { continue }
             return Ok(read)
         }
     }
