@@ -71,8 +71,8 @@ impl<R: Read> Read for BzCompressor<R> {
 }
 
 impl<R: Read> BzDecompressor<R> {
-    /// Create a new compression stream which will compress at the given level
-    /// to read compress output to the give output stream.
+    /// Create a new decompression stream, which will read compressed
+    /// data from the given input stream and decompress it.
     pub fn new(r: R) -> BzDecompressor<R> {
         BzDecompressor(Inner {
             stream: Stream::new_decompress(false),
