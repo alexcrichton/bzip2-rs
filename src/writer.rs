@@ -35,24 +35,34 @@ impl<W: Write> BzCompressor<W> {
     }
 
     fn do_write(&mut self, data: &[u8], action: Action) -> io::Result<usize> {
+        let mut written = 0;
+        loop {
+            try!(self.dump_buffer());
+
+            let total_in = self.stream.total_in();
+            let rc = self.stream.compress_vec(&data[written..], &mut self.buf,
+                                              action);
+            written += (self.stream.total_in() - total_in) as usize;
+
+            if rc < 0 {
+                panic!("unexpected return: {}", rc);
+            }
+
+            if action != Action::Finish {
+                return Ok(written)
+            } else if rc == ffi::BZ_STREAM_END {
+                try!(self.dump_buffer());
+                return Ok(written)
+            }
+        }
+    }
+
+    fn dump_buffer(&mut self) -> io::Result<()> {
         if self.buf.len() > 0 {
             try!(self.w.as_mut().unwrap().write_all(&self.buf));
             self.buf.truncate(0);
         }
-
-        let total_in = self.stream.total_in();
-        let rc = self.stream.compress_vec(data, &mut self.buf, action);
-        let written = (self.stream.total_in() - total_in) as usize;
-
-        if rc < 0 {
-            panic!("unexpected return: {}", rc);
-        }
-
-        if action == Action::Finish && self.buf.len() > 0 {
-            try!(self.w.as_mut().unwrap().write_all(&self.buf));
-            self.buf.truncate(0);
-        }
-        Ok(written)
+        Ok(())
     }
 
     /// Unwrap the underlying writer, finishing the compression stream.
@@ -87,6 +97,7 @@ impl<W: Write> Write for BzCompressor<W> {
 
     fn flush(&mut self) -> io::Result<()> {
         try!(self.do_write(&[], Action::Flush));
+        try!(self.dump_buffer());
         self.w.as_mut().unwrap().flush()
     }
 }
