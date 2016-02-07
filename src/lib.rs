@@ -12,16 +12,15 @@
 //! # Example
 //!
 //! ```
-//! # #![allow(unstable)]
 //! use std::io::prelude::*;
-//! use bzip2::Compress;
-//! use bzip2::reader::{BzCompressor, BzDecompressor};
+//! use bzip2::Compression;
+//! use bzip2::read::{BzEncoder, BzDecoder};
 //!
 //! // Round trip some bytes from a byte source, into a compressor, into a
 //! // decompressor, and finally into a vector.
 //! let data = "Hello, World!".as_bytes();
-//! let compressor = BzCompressor::new(data, Compress::Best);
-//! let mut decompressor = BzDecompressor::new(compressor);
+//! let compressor = BzEncoder::new(data, Compression::Best);
+//! let mut decompressor = BzDecoder::new(compressor);
 //!
 //! let mut contents = String::new();
 //! decompressor.read_to_string(&mut contents).unwrap();
@@ -37,30 +36,18 @@ extern crate libc;
 #[cfg(test)]
 extern crate rand;
 
-pub mod raw;
-pub mod writer;
-pub mod reader;
+pub use mem::{Compress, Decompress, Action, Status, Error};
 
-use std::io::prelude::*;
+mod mem;
 
-/// Compress a block of input data into a bzip2 encoded output vector.
-pub fn compress(data: &[u8], level: Compress) -> Vec<u8> {
-    let mut wr = writer::BzCompressor::new(Vec::new(), level);
-    wr.write_all(data).unwrap();
-    wr.into_inner().ok().unwrap()
-}
-
-/// Decompress a block of compressed input data into a raw output vector.
-pub fn decompress(data: &[u8]) -> Vec<u8> {
-    let mut wr = writer::BzDecompressor::new(Vec::new());
-    wr.write_all(data).unwrap();
-    wr.into_inner().ok().unwrap()
-}
+pub mod bufread;
+pub mod read;
+pub mod write;
 
 /// When compressing data, the compression level can be specified by a value in
 /// this enum.
 #[derive(Copy, Clone)]
-pub enum Compress {
+pub enum Compression {
     /// Optimize for the best speed of encoding.
     Fastest = 1,
     /// Optimize for the size of data being encoded.
