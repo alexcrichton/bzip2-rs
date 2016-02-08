@@ -3,7 +3,7 @@
 use std::io::prelude::*;
 use std::io;
 
-use {Compress, Decompress, Compression, Action, Status, Error};
+use {Compress, Decompress, Compression, Action, Status};
 
 /// A bz2 encoder, or compressor.
 ///

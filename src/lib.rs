@@ -27,8 +27,7 @@
 //! assert_eq!(contents, "Hello, World!");
 //! ```
 
-#![deny(missing_docs)]
-#![cfg_attr(test, deny(warnings))]
+#![deny(missing_docs, warnings)]
 #![doc(html_root_url = "http://alexcrichton.com/bzip2-rs")]
 
 extern crate bzip2_sys as ffi;
