@@ -117,8 +117,8 @@ impl<W: Write> Drop for BzEncoder<W> {
 }
 
 impl<W: Write> BzDecoder<W> {
-    /// Create a new compression stream which will compress at the given level
-    /// to write compress output to the give output stream.
+    /// Create a new decoding stream which will decompress all data written
+    /// to it into `obj`.
     pub fn new(obj: W) -> BzDecoder<W> {
         BzDecoder {
             data: Decompress::new(false),
