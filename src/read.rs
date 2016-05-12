@@ -208,6 +208,15 @@ mod tests {
     }
 
     #[test]
+    fn empty() {
+        let r = BzEncoder::new(&[][..], Compression::Default);
+        let mut r = BzDecoder::new(r);
+        let mut v2 = Vec::new();
+        r.read_to_end(&mut v2).unwrap();
+        assert!(v2.len() == 0);
+    }
+
+    #[test]
     fn qc() {
         ::quickcheck::quickcheck(test as fn(_) -> _);
 
