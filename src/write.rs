@@ -231,4 +231,16 @@ mod tests {
         let data = c.finish().unwrap().finish().unwrap();
         assert_eq!(&data[..], b"");
     }
+
+    #[test]
+    fn qc() {
+        ::quickcheck::quickcheck(test as fn(_) -> _);
+
+        fn test(v: Vec<u8>) -> bool {
+            let w = BzDecoder::new(Vec::new());
+            let mut w = BzEncoder::new(w, ::Compression::Default);
+            w.write_all(&v).unwrap();
+            v == w.finish().unwrap().finish().unwrap()
+        }
+    }
 }

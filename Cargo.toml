@@ -20,3 +20,4 @@ bzip2-sys = { version = "0.1", path = "bzip2-sys" }
 
 [dev-dependencies]
 rand = "0.3"
+quickcheck = "0.2"

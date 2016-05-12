@@ -206,5 +206,18 @@ mod tests {
         let mut data = Vec::new();
         assert!(d.read(&mut data).unwrap() == 0);
     }
+
+    #[test]
+    fn qc() {
+        ::quickcheck::quickcheck(test as fn(_) -> _);
+
+        fn test(v: Vec<u8>) -> bool {
+            let r = BzEncoder::new(&v[..], Compression::Default);
+            let mut r = BzDecoder::new(r);
+            let mut v2 = Vec::new();
+            r.read_to_end(&mut v2).unwrap();
+            v == v2
+        }
+    }
 }
 
