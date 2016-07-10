@@ -7,7 +7,7 @@
 //! need.
 //!
 //! Access to the raw decompression/compression stream is also provided through
-//! the `raw` module which has a much closer interfact to libbz2.
+//! the `raw` module which has a much closer interface to libbz2.
 //!
 //! # Example
 //!
