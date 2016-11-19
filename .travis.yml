@@ -20,4 +20,4 @@ notifications:
     on_success: never
 env:
   global:
-    secure: LnMCySc8+eTOXugkmPTLwZTT2pgrhxY3wiEuQ2eBaMcSwzZswDLNFBhjI0WWF6MPl9Ou9BSUbBtwwxKztY8jhtIDRSxn/CisWMFb4mRM1T/eq9LTDU+Po/WQ4zZP6ZUYpch8UgrcsiRF/VasvhcyNQrUGI16eMCky5NeqaBwaJU=
+    secure: "PXNga5meeArqD5RcInRiqDIHCsVqYlBtx6NSAQfCcKgo8z3qE5A2ig3txIS0rWNWbv+j2nlmOes6mljLx3Bx9O99hXIM5d2/UKHrzCWm8vJYmK6cw51r58MmZh4TMNo+p5aBN2aclluv5W1pueC1ndQ3QPGcVE4JgboUQNPIveU="
