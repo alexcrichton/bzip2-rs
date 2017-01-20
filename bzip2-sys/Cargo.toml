@@ -8,7 +8,7 @@ build = "build.rs"
 license = "MIT/Apache-2.0"
 repository = "https://github.com/alexcrichton/bzip2-rs"
 homepage = "https://github.com/alexcrichton/bzip2-rs"
-documentation = "http://alexcrichton.com/bzip2-rs"
+documentation = "https://docs.rs/bzip2-sys"
 description = """
 Bindings to libbzip2 for bzip2 compression and decompression exposed as
 Reader/Writer streams.

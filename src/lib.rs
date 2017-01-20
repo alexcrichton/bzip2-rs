@@ -28,7 +28,7 @@
 //! ```
 
 #![deny(missing_docs, warnings)]
-#![doc(html_root_url = "http://alexcrichton.com/bzip2-rs")]
+#![doc(html_root_url = "https://docs.rs/bzip2/0.3")]
 
 extern crate bzip2_sys as ffi;
 extern crate libc;

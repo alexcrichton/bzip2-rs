@@ -1,4 +1,4 @@
-#![doc(html_root_url = "http://alexcrichton.com/bzip2-rs")]
+#![doc(html_root_url = "https://docs.rs/bzip2-sys/0.1")]
 
 extern crate libc;
 
