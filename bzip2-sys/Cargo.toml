@@ -13,6 +13,7 @@ description = """
 Bindings to libbzip2 for bzip2 compression and decompression exposed as
 Reader/Writer streams.
 """
+categories = ["external-ffi-bindings"]
 
 [lib]
 name = "bzip2_sys"
