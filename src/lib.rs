@@ -47,7 +47,7 @@ pub mod write;
 
 /// When compressing data, the compression level can be specified by a value in
 /// this enum.
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum Compression {
     /// Optimize for the best speed of encoding.
     Fastest = 1,
