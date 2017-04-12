@@ -97,7 +97,6 @@ impl<R: AsyncWrite + Read> AsyncWrite for BzEncoder<R> {
     }
 }
 
-
 impl<R: Read> BzDecoder<R> {
     /// Create a new decompression stream, which will read compressed
     /// data from the given input stream and decompress it.
