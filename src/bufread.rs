@@ -3,13 +3,18 @@
 use std::io::prelude::*;
 use std::io;
 
+#[cfg(feature = "tokio")]
+use futures::Poll;
+#[cfg(feature = "tokio")]
+use tokio_io::{AsyncRead, AsyncWrite};
+
 use {Compress, Decompress, Compression, Action, Status};
 
 /// A bz2 encoder, or compressor.
 ///
 /// This structure implements a `BufRead` interface and will read uncompressed
 /// data from an underlying stream and emit a stream of compressed data.
-pub struct BzEncoder<R: BufRead> {
+pub struct BzEncoder<R> {
     obj: R,
     data: Compress,
     done: bool,
@@ -19,7 +24,7 @@ pub struct BzEncoder<R: BufRead> {
 ///
 /// This structure implements a `BufRead` interface and takes a stream of
 /// compressed data as input, providing the decompressed data when read from.
-pub struct BzDecoder<R: BufRead> {
+pub struct BzDecoder<R> {
     obj: R,
     data: Decompress,
     done: bool,
@@ -35,7 +40,9 @@ impl<R: BufRead> BzEncoder<R> {
             done: false,
         }
     }
+}
 
+impl<R> BzEncoder<R> {
     /// Acquires a reference to the underlying stream
     pub fn get_ref(&self) -> &R {
         &self.obj
@@ -73,6 +80,7 @@ impl<R: BufRead> BzEncoder<R> {
         self.data.total_in()
     }
 }
+
 impl<R: BufRead> Read for BzEncoder<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         if self.done {
@@ -110,6 +118,27 @@ impl<R: BufRead> Read for BzEncoder<R> {
     }
 }
 
+#[cfg(feature = "tokio")]
+impl<R: AsyncRead + BufRead> AsyncRead for BzEncoder<R> {
+}
+
+impl<W: Write> Write for BzEncoder<W> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.get_mut().write(buf)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        self.get_mut().flush()
+    }
+}
+
+#[cfg(feature = "tokio")]
+impl<R: AsyncWrite> AsyncWrite for BzEncoder<R> {
+    fn shutdown(&mut self) -> Poll<(), io::Error> {
+        self.get_mut().shutdown()
+    }
+}
+
 impl<R: BufRead> BzDecoder<R> {
     /// Creates a new decoder which will decompress data read from the given
     /// stream.
@@ -120,7 +149,9 @@ impl<R: BufRead> BzDecoder<R> {
             done: false,
         }
     }
+}
 
+impl<R> BzDecoder<R> {
     /// Acquires a reference to the underlying stream
     pub fn get_ref(&self) -> &R {
         &self.obj
@@ -182,5 +213,26 @@ impl<R: BufRead> Read for BzDecoder<R> {
                 return Ok(read)
             }
         }
+    }
+}
+
+#[cfg(feature = "tokio")]
+impl<R: AsyncRead + BufRead> AsyncRead for BzDecoder<R> {
+}
+
+impl<W: Write> Write for BzDecoder<W> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.get_mut().write(buf)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        self.get_mut().flush()
+    }
+}
+
+#[cfg(feature = "tokio")]
+impl<R: AsyncWrite> AsyncWrite for BzDecoder<R> {
+    fn shutdown(&mut self) -> Poll<(), io::Error> {
+        self.get_mut().shutdown()
     }
 }

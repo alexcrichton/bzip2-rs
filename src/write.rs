@@ -3,6 +3,11 @@
 use std::io::prelude::*;
 use std::io;
 
+#[cfg(feature = "tokio")]
+use futures::Poll;
+#[cfg(feature = "tokio")]
+use tokio_io::{AsyncRead, AsyncWrite};
+
 use {Action, Status, Compression, Compress, Decompress};
 
 /// A compression stream which will have uncompressed data written to it and
@@ -11,6 +16,7 @@ pub struct BzEncoder<W: Write> {
     data: Compress,
     obj: Option<W>,
     buf: Vec<u8>,
+    done: bool,
 }
 
 /// A compression stream which will have compressed data written to it and
@@ -30,22 +36,47 @@ impl<W: Write> BzEncoder<W> {
             data: Compress::new(level, 30),
             obj: Some(obj),
             buf: Vec::with_capacity(32 * 1024),
+            done: false,
         }
     }
 
     fn dump(&mut self) -> io::Result<()> {
-        if self.buf.len() > 0 {
-            try!(self.obj.as_mut().unwrap().write_all(&self.buf));
-            self.buf.truncate(0);
+        while self.buf.len() > 0 {
+            let n = try!(self.obj.as_mut().unwrap().write(&self.buf));
+            self.buf.drain(..n);
         }
         Ok(())
     }
 
-    fn do_finish(&mut self) -> io::Result<()> {
-        loop {
+    /// Acquires a reference to the underlying writer.
+    pub fn get_ref(&self) -> &W {
+        self.obj.as_ref().unwrap()
+    }
+
+    /// Acquires a mutable reference to the underlying writer.
+    ///
+    /// Note that mutating the output/input state of the stream may corrupt this
+    /// object, so care must be taken when using this method.
+    pub fn get_mut(&mut self) -> &mut W {
+        self.obj.as_mut().unwrap()
+    }
+
+    /// Attempt to finish this output stream, writing out final chunks of data.
+    ///
+    /// Note that this function can only be used once data has finished being
+    /// written to the output stream. After this function is called then further
+    /// calls to `write` may result in a panic.
+    ///
+    /// # Panics
+    ///
+    /// Attempts to write data to this stream may result in a panic after this
+    /// function is called.
+    pub fn try_finish(&mut self) -> io::Result<()> {
+        while !self.done {
             try!(self.dump());
             let res = self.data.compress_vec(&[], &mut self.buf, Action::Finish);
             if res == Ok(Status::StreamEnd) {
+                self.done = true;
                 break
             }
         }
@@ -56,8 +87,14 @@ impl<W: Write> BzEncoder<W> {
     ///
     /// This will flush the underlying data stream and then return the contained
     /// writer if the flush succeeded.
+    ///
+    /// Note that this function may not be suitable to call in a situation where
+    /// the underlying stream is an asynchronous I/O stream. To finish a stream
+    /// the `try_finish` (or `shutdown`) method should be used instead. To
+    /// re-acquire ownership of a stream it is safe to call this method after
+    /// `try_finish` or `shutdown` has returned `Ok`.
     pub fn finish(mut self) -> io::Result<W> {
-        try!(self.do_finish());
+        try!(self.try_finish());
         Ok(self.obj.take().unwrap())
     }
 
@@ -108,10 +145,28 @@ impl<W: Write> Write for BzEncoder<W> {
     }
 }
 
+#[cfg(feature = "tokio")]
+impl<W: AsyncWrite> AsyncWrite for BzEncoder<W> {
+    fn shutdown(&mut self) -> Poll<(), io::Error> {
+        try_nb!(self.try_finish());
+        self.get_mut().shutdown()
+    }
+}
+
+impl<W: Read + Write> Read for BzEncoder<W> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.get_mut().read(buf)
+    }
+}
+
+#[cfg(feature = "tokio")]
+impl<W: AsyncRead + AsyncWrite> AsyncRead for BzEncoder<W> {
+}
+
 impl<W: Write> Drop for BzEncoder<W> {
     fn drop(&mut self) {
         if self.obj.is_some() {
-            let _ = self.do_finish();
+            let _ = self.try_finish();
         }
     }
 }
@@ -128,15 +183,38 @@ impl<W: Write> BzDecoder<W> {
         }
     }
 
+    /// Acquires a reference to the underlying writer.
+    pub fn get_ref(&self) -> &W {
+        self.obj.as_ref().unwrap()
+    }
+
+    /// Acquires a mutable reference to the underlying writer.
+    ///
+    /// Note that mutating the output/input state of the stream may corrupt this
+    /// object, so care must be taken when using this method.
+    pub fn get_mut(&mut self) -> &mut W {
+        self.obj.as_mut().unwrap()
+    }
+
     fn dump(&mut self) -> io::Result<()> {
-        if self.buf.len() > 0 {
-            try!(self.obj.as_mut().unwrap().write_all(&self.buf));
-            self.buf.truncate(0);
+        while self.buf.len() > 0 {
+            let n = try!(self.obj.as_mut().unwrap().write(&self.buf));
+            self.buf.drain(..n);
         }
         Ok(())
     }
 
-    fn do_finish(&mut self) -> io::Result<()> {
+    /// Attempt to finish this output stream, writing out final chunks of data.
+    ///
+    /// Note that this function can only be used once data has finished being
+    /// written to the output stream. After this function is called then further
+    /// calls to `write` may result in a panic.
+    ///
+    /// # Panics
+    ///
+    /// Attempts to write data to this stream may result in a panic after this
+    /// function is called.
+    pub fn try_finish(&mut self) -> io::Result<()> {
         while !self.done {
             try!(self.write(&[]));
         }
@@ -144,8 +222,14 @@ impl<W: Write> BzDecoder<W> {
     }
 
     /// Unwrap the underlying writer, finishing the compression stream.
+    ///
+    /// Note that this function may not be suitable to call in a situation where
+    /// the underlying stream is an asynchronous I/O stream. To finish a stream
+    /// the `try_finish` (or `shutdown`) method should be used instead. To
+    /// re-acquire ownership of a stream it is safe to call this method after
+    /// `try_finish` or `shutdown` has returned `Ok`.
     pub fn finish(&mut self) -> io::Result<W> {
-        try!(self.do_finish());
+        try!(self.try_finish());
         Ok(self.obj.take().unwrap())
     }
 
@@ -196,10 +280,28 @@ impl<W: Write> Write for BzDecoder<W> {
     }
 }
 
+#[cfg(feature = "tokio")]
+impl<W: AsyncWrite> AsyncWrite for BzDecoder<W> {
+    fn shutdown(&mut self) -> Poll<(), io::Error> {
+        try_nb!(self.try_finish());
+        self.get_mut().shutdown()
+    }
+}
+
+impl<W: Read + Write> Read for BzDecoder<W> {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        self.get_mut().read(buf)
+    }
+}
+
+#[cfg(feature = "tokio")]
+impl<W: AsyncRead + AsyncWrite> AsyncRead for BzDecoder<W> {
+}
+
 impl<W: Write> Drop for BzDecoder<W> {
     fn drop(&mut self) {
         if self.obj.is_some() {
-            let _ = self.do_finish();
+            let _ = self.try_finish();
         }
     }
 }

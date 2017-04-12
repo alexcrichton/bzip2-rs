@@ -3,18 +3,23 @@
 use std::io::prelude::*;
 use std::io::{self, BufReader};
 
+#[cfg(feature = "tokio")]
+use futures::Poll;
+#[cfg(feature = "tokio")]
+use tokio_io::{AsyncRead, AsyncWrite};
+
 use bufread;
 use Compression;
 
 /// A compression stream which wraps an uncompressed stream of data. Compressed
 /// data will be read from the stream.
-pub struct BzEncoder<R: Read> {
+pub struct BzEncoder<R> {
     inner: bufread::BzEncoder<BufReader<R>>,
 }
 
 /// A decompression stream which wraps a compressed stream of data. Decompressed
 /// data will be read from the stream.
-pub struct BzDecoder<R: Read> {
+pub struct BzDecoder<R> {
     inner: bufread::BzDecoder<BufReader<R>>,
 }
 
@@ -71,6 +76,28 @@ impl<R: Read> Read for BzEncoder<R> {
     }
 }
 
+#[cfg(feature = "tokio")]
+impl<R: AsyncRead> AsyncRead for BzEncoder<R> {
+}
+
+impl<W: Write + Read> Write for BzEncoder<W> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.get_mut().write(buf)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        self.get_mut().flush()
+    }
+}
+
+#[cfg(feature = "tokio")]
+impl<R: AsyncWrite + Read> AsyncWrite for BzEncoder<R> {
+    fn shutdown(&mut self) -> Poll<(), io::Error> {
+        self.get_mut().shutdown()
+    }
+}
+
+
 impl<R: Read> BzDecoder<R> {
     /// Create a new decompression stream, which will read compressed
     /// data from the given input stream and decompress it.
@@ -117,8 +144,29 @@ impl<R: Read> BzDecoder<R> {
 }
 
 impl<R: Read> Read for BzDecoder<R> {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        self.inner.read(buf)
+    fn read(&mut self, into: &mut [u8]) -> io::Result<usize> {
+        self.inner.read(into)
+    }
+}
+
+#[cfg(feature = "tokio")]
+impl<R: AsyncRead + Read> AsyncRead for BzDecoder<R> {
+}
+
+impl<W: Write + Read> Write for BzDecoder<W> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.get_mut().write(buf)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        self.get_mut().flush()
+    }
+}
+
+#[cfg(feature = "tokio")]
+impl<R: AsyncWrite + Read> AsyncWrite for BzDecoder<R> {
+    fn shutdown(&mut self) -> Poll<(), io::Error> {
+        self.get_mut().shutdown()
     }
 }
 
