@@ -1,3 +1,5 @@
+environment:
+  RUSTUP_USE_HYPER: 1
 install:
   # Download and instal rustup, the CLI tool form https://rustup.rs
   - appveyor DownloadFile https://win.rustup.rs/ -FileName rustup-init.exe
