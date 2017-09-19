@@ -1,7 +1,6 @@
 [package]
-
 name = "bzip2-sys"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
 links = "bzip2"
 build = "build.rs"
