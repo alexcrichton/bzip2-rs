@@ -18,6 +18,9 @@ categories = ["external-ffi-bindings"]
 name = "bzip2_sys"
 path = "lib.rs"
 
+[features]
+with-stdio = []
+
 [dependencies]
 libc = "0.2"
 
