@@ -19,7 +19,7 @@ name = "bzip2_sys"
 path = "lib.rs"
 
 [features]
-with-stdio = []
+no-stdio = []
 
 [dependencies]
 libc = "0.2"

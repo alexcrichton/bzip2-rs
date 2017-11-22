@@ -13,7 +13,7 @@ fn main() {
     }
 
     cfg.include("bzip2-1.0.6").define("_FILE_OFFSET_BITS", Some("64"));
-    if !cfg!(feature = "with-stdio") {
+    if cfg!(feature = "no-stdio") {
         cfg.define("BZ_NO_STDIO", None);
     };
     cfg.file("bzip2-1.0.6/blocksort.c")

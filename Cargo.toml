@@ -31,3 +31,4 @@ tokio-core = "0.1"
 
 [features]
 tokio = ["tokio-io", "futures"]
+no-stdio = ["bzip2-sys/no-stdio"]
