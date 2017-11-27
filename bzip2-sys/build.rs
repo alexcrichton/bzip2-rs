@@ -12,11 +12,10 @@ fn main() {
         cfg.define("BZ_EXPORT", None);
     }
 
-    cfg.include("bzip2-1.0.6").define("_FILE_OFFSET_BITS", Some("64"));
-    if cfg!(feature = "no-stdio") {
-        cfg.define("BZ_NO_STDIO", None);
-    };
-    cfg.file("bzip2-1.0.6/blocksort.c")
+    cfg.include("bzip2-1.0.6")
+       .define("_FILE_OFFSET_BITS", Some("64"))
+       .define("BZ_NO_STDIO", None)
+       .file("bzip2-1.0.6/blocksort.c")
        .file("bzip2-1.0.6/huffman.c")
        .file("bzip2-1.0.6/crctable.c")
        .file("bzip2-1.0.6/randtable.c")

@@ -11,7 +11,6 @@ script:
   - cargo build --verbose
   - cargo test --verbose
   - cargo test --verbose --features tokio
-  - cargo test --verbose --features no-stdio
   - rustdoc --test README.md -L target/debug -L target/debug/deps
   - cargo doc --no-deps
   - cargo doc --no-deps --manifest-path=bzip2-sys/Cargo.toml

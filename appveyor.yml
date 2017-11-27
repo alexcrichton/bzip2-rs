@@ -16,4 +16,3 @@ build: false
 test_script:
   - cargo test --verbose --target %TARGET%
   - cargo test --verbose --target %TARGET% --features tokio
-  - cargo test --verbose --target %TARGET% --features no-stdio

@@ -69,7 +69,6 @@ abi_compat! {
     pub fn BZ2_bzDecompressEnd(stream: *mut bz_stream) -> c_int,
 }
 
-#[cfg(feature = "no-stdio")]
 #[no_mangle]
 pub fn bz_internal_error(errcode: c_int) {
     panic!("bz internal error: {}", errcode);
