@@ -10,7 +10,7 @@ A streaming compression/decompression library for rust with bindings to libbz2.
 ```toml
 # Cargo.toml
 [dependencies]
-bzip2 = "0.2"
+bzip2 = "0.3.2"
 ```
 
 
