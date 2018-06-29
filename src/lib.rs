@@ -47,7 +47,7 @@
 //! time to perform I/O. If I/O streams are flushed before drop, however, then
 //! these operations will be a noop.
 
-#![deny(missing_docs, warnings)]
+#![deny(missing_docs)]
 #![doc(html_root_url = "https://docs.rs/bzip2/0.3")]
 
 extern crate bzip2_sys as ffi;
