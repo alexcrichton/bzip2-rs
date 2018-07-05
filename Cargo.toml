@@ -25,7 +25,7 @@ futures = { version = "0.1", optional = true }
 
 [dev-dependencies]
 rand = "0.3"
-partial-io = { version = "^0.2.1", features = ["quickcheck"] }
+partial-io = { version = "^0.3.0", features = ["quickcheck"] }
 quickcheck = "0.4"
 tokio-core = "0.1"
 
