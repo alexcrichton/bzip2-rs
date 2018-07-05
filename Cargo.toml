@@ -1,5 +1,4 @@
 [package]
-
 name = "bzip2"
 version = "0.3.3"
 authors = ["Alex Crichton <alex@alexcrichton.com>"]
@@ -24,9 +23,9 @@ tokio-io = { version = "0.1", optional = true }
 futures = { version = "0.1", optional = true }
 
 [dev-dependencies]
-rand = "0.3"
-partial-io = { version = "^0.2.1", features = ["quickcheck"] }
-quickcheck = "0.4"
+rand = "0.5"
+partial-io = { version = "0.3", features = ["quickcheck"] }
+quickcheck = "0.6"
 tokio-core = "0.1"
 
 [features]

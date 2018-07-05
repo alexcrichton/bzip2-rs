@@ -175,6 +175,7 @@ mod tests {
     use read::{BzEncoder, BzDecoder};
     use Compression;
     use rand::{thread_rng, Rng};
+    use rand::distributions::Standard;
     use partial_io::{GenInterrupted, PartialRead, PartialWithErrors};
 
     #[test]
@@ -217,9 +218,9 @@ mod tests {
         let mut result = Vec::new();
         c.read_to_end(&mut result).unwrap();
 
-        let v = thread_rng().gen_iter::<u8>().take(1024).collect::<Vec<_>>();
+        let v = thread_rng().sample_iter(&Standard).take(1024).collect::<Vec<_>>();
         for _ in 0..200 {
-            result.extend(v.iter().map(|x| *x));
+            result.extend(v.iter().map(|x: &u8| *x));
         }
 
         let mut d = BzDecoder::new(&result[..]);
