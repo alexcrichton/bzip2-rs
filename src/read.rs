@@ -181,7 +181,7 @@ mod tests {
     #[test]
     fn smoke() {
         let m: &[u8] = &[1, 2, 3, 4, 5, 6, 7, 8];
-        let mut c = BzEncoder::new(m, Compression::Default);
+        let mut c = BzEncoder::new(m, Compression::default());
         let mut data = vec![];
         c.read_to_end(&mut data).unwrap();
         let mut d = BzDecoder::new(&data[..]);
@@ -193,7 +193,7 @@ mod tests {
     #[test]
     fn smoke2() {
         let m: &[u8] = &[1, 2, 3, 4, 5, 6, 7, 8];
-        let c = BzEncoder::new(m, Compression::Default);
+        let c = BzEncoder::new(m, Compression::default());
         let mut d = BzDecoder::new(c);
         let mut data = vec![];
         d.read_to_end(&mut data).unwrap();
@@ -203,7 +203,7 @@ mod tests {
     #[test]
     fn smoke3() {
         let m = vec![3u8; 128 * 1024 + 1];
-        let c = BzEncoder::new(&m[..], Compression::Default);
+        let c = BzEncoder::new(&m[..], Compression::default());
         let mut d = BzDecoder::new(c);
         let mut data = vec![];
         d.read_to_end(&mut data).unwrap();
@@ -213,7 +213,7 @@ mod tests {
     #[test]
     fn self_terminating() {
         let m = vec![3u8; 128 * 1024 + 1];
-        let mut c = BzEncoder::new(&m[..], Compression::Default);
+        let mut c = BzEncoder::new(&m[..], Compression::default());
 
         let mut result = Vec::new();
         c.read_to_end(&mut result).unwrap();
@@ -233,7 +233,7 @@ mod tests {
     #[test]
     fn zero_length_read_at_eof() {
         let m = Vec::new();
-        let mut c = BzEncoder::new(&m[..], Compression::Default);
+        let mut c = BzEncoder::new(&m[..], Compression::default());
 
         let mut result = Vec::new();
         c.read_to_end(&mut result).unwrap();
@@ -246,7 +246,7 @@ mod tests {
     #[test]
     fn zero_length_read_with_data() {
         let m = vec![3u8; 128 * 1024 + 1];
-        let mut c = BzEncoder::new(&m[..], Compression::Default);
+        let mut c = BzEncoder::new(&m[..], Compression::default());
 
         let mut result = Vec::new();
         c.read_to_end(&mut result).unwrap();
@@ -258,7 +258,7 @@ mod tests {
 
     #[test]
     fn empty() {
-        let r = BzEncoder::new(&[][..], Compression::Default);
+        let r = BzEncoder::new(&[][..], Compression::default());
         let mut r = BzDecoder::new(r);
         let mut v2 = Vec::new();
         r.read_to_end(&mut v2).unwrap();
@@ -270,7 +270,7 @@ mod tests {
         ::quickcheck::quickcheck(test as fn(_) -> _);
 
         fn test(v: Vec<u8>) -> bool {
-            let r = BzEncoder::new(&v[..], Compression::Default);
+            let r = BzEncoder::new(&v[..], Compression::default());
             let mut r = BzDecoder::new(r);
             let mut v2 = Vec::new();
             r.read_to_end(&mut v2).unwrap();
@@ -285,7 +285,7 @@ mod tests {
         fn test(v: Vec<u8>,
                 encode_ops: PartialWithErrors<GenInterrupted>,
                 decode_ops: PartialWithErrors<GenInterrupted>) -> bool {
-            let r = BzEncoder::new(PartialRead::new(&v[..], encode_ops), Compression::Default);
+            let r = BzEncoder::new(PartialRead::new(&v[..], encode_ops), Compression::default());
             let mut r = BzDecoder::new(PartialRead::new(r, decode_ops));
             let mut v2 = Vec::new();
             r.read_to_end(&mut v2).unwrap();

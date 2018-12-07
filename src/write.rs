@@ -324,7 +324,7 @@ mod tests {
     #[test]
     fn smoke() {
         let d = BzDecoder::new(Vec::new());
-        let mut c = BzEncoder::new(d, ::Compression::Default);
+        let mut c = BzEncoder::new(d, ::Compression::default());
         c.write_all(b"12834").unwrap();
         let s = repeat("12345").take(100000).collect::<String>();
         c.write_all(s.as_bytes()).unwrap();
@@ -337,7 +337,7 @@ mod tests {
     #[test]
     fn write_empty() {
         let d = BzDecoder::new(Vec::new());
-        let mut c = BzEncoder::new(d, ::Compression::Default);
+        let mut c = BzEncoder::new(d, ::Compression::default());
         c.write(b"").unwrap();
         let data = c.finish().unwrap().finish().unwrap();
         assert_eq!(&data[..], b"");
@@ -349,7 +349,7 @@ mod tests {
 
         fn test(v: Vec<u8>) -> bool {
             let w = BzDecoder::new(Vec::new());
-            let mut w = BzEncoder::new(w, ::Compression::Default);
+            let mut w = BzEncoder::new(w, ::Compression::default());
             w.write_all(&v).unwrap();
             v == w.finish().unwrap().finish().unwrap()
         }
@@ -363,7 +363,7 @@ mod tests {
                 encode_ops: PartialWithErrors<GenInterrupted>,
                 decode_ops: PartialWithErrors<GenInterrupted>) -> bool {
             let w = BzDecoder::new(PartialWrite::new(Vec::new(), decode_ops));
-            let mut w = BzEncoder::new(PartialWrite::new(w, encode_ops), ::Compression::Default);
+            let mut w = BzEncoder::new(PartialWrite::new(w, encode_ops), ::Compression::default());
             w.write_all(&v).unwrap();
             v == w.finish().unwrap().into_inner().finish().unwrap().into_inner()
         }

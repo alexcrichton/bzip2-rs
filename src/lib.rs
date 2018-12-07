@@ -19,7 +19,7 @@
 //! // Round trip some bytes from a byte source, into a compressor, into a
 //! // decompressor, and finally into a vector.
 //! let data = "Hello, World!".as_bytes();
-//! let compressor = BzEncoder::new(data, Compression::Best);
+//! let compressor = BzEncoder::new(data, Compression::best());
 //! let mut decompressor = BzDecoder::new(compressor);
 //!
 //! let mut contents = String::new();
@@ -33,7 +33,7 @@
 //! the `tokio` feature of this crate:
 //!
 //! ```toml
-//! bzip2 = { version = "0.3", features = ["tokio"] }
+//! bzip2 = { version = "0.4", features = ["tokio"] }
 //! ```
 //!
 //! All methods are internally capable of working with streams that may return
@@ -48,7 +48,7 @@
 //! these operations will be a noop.
 
 #![deny(missing_docs)]
-#![doc(html_root_url = "https://docs.rs/bzip2/0.3")]
+#![doc(html_root_url = "https://docs.rs/bzip2/")]
 
 extern crate bzip2_sys as ffi;
 extern crate libc;
@@ -75,12 +75,38 @@ pub mod write;
 /// When compressing data, the compression level can be specified by a value in
 /// this enum.
 #[derive(Copy, Clone, Debug)]
-pub enum Compression {
+pub struct Compression(u32);
+
+impl Compression {
+    /// Create a new compression spec with a specific numeric level (0-9).
+    pub fn new(level: u32) -> Compression {
+        Compression(level)
+    }
+
+    /// Do not compress.
+    pub fn none() -> Compression {
+        Compression(0)
+    }
+
     /// Optimize for the best speed of encoding.
-    Fastest = 1,
+    pub fn fast() -> Compression {
+        Compression(1)
+    }
+
     /// Optimize for the size of data being encoded.
-    Best = 9,
-    /// Choose the default compression, a balance between speed and size.
-    Default = 6,
+    pub fn best() -> Compression {
+        Compression(9)
+    }
+
+    /// Return the compression level as an integer.
+    pub fn level(&self) -> u32 {
+        self.0
+    }
 }
 
+impl Default for Compression {
+    /// Choose the default compression, a balance between speed and size.
+    fn default() -> Compression {
+        Compression(6)
+    }
+}
