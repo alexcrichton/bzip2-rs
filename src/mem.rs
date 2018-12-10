@@ -120,7 +120,7 @@ impl Compress {
     pub fn new(lvl: Compression, work_factor: u32) -> Compress {
         unsafe {
             let mut raw = Box::new(mem::zeroed());
-            assert_eq!(ffi::BZ2_bzCompressInit(&mut *raw, lvl as c_int, 0,
+            assert_eq!(ffi::BZ2_bzCompressInit(&mut *raw, lvl.level() as c_int, 0,
                                                work_factor as c_int), 0);
             Compress {
                 inner: Stream { raw: raw, _marker: marker::PhantomData },
