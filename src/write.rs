@@ -120,15 +120,16 @@ impl<W: Write> BzEncoder<W> {
 
 impl<W: Write> Write for BzEncoder<W> {
     fn write(&mut self, data: &[u8]) -> io::Result<usize> {
+        let start = self.total_in();
         loop {
             try!(self.dump());
 
-            let total_in = self.total_in();
-            self.data.compress_vec(data, &mut self.buf, Action::Run)
+            let cur_data = &data[(self.total_in() - start) as usize..];
+            self.data.compress_vec(cur_data, &mut self.buf, Action::Run)
                 .unwrap();
-            let written = (self.total_in() - total_in) as usize;
 
-            if written > 0 || data.len() == 0 {
+            let written = (self.total_in() - start) as usize;
+            if written >= data.len() || cur_data.len() == 0 {
                 return Ok(written)
             }
         }
@@ -262,12 +263,13 @@ impl<W: Write> Write for BzDecoder<W> {
         if self.done {
             return Ok(0)
         }
+
+        let start = self.total_in();
         loop {
             try!(self.dump());
 
-            let before = self.total_in();
-            let res = self.data.decompress_vec(data, &mut self.buf);
-            let written = (self.total_in() - before) as usize;
+            let cur_data = &data[(self.total_in() - start) as usize..];
+            let res = self.data.decompress_vec(cur_data, &mut self.buf);
 
             let res = try!(res.map_err(|e| {
                 io::Error::new(io::ErrorKind::InvalidInput, e)
@@ -276,7 +278,9 @@ impl<W: Write> Write for BzDecoder<W> {
             if res == Status::StreamEnd {
                 self.done = true;
             }
-            if written > 0 || data.len() == 0 || self.done {
+
+            let written = (self.total_in() - start) as usize;
+            if written >= data.len() || cur_data.len() == 0 || self.done {
                 return Ok(written)
             }
         }
