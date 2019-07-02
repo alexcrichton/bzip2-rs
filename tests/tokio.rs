@@ -75,7 +75,8 @@ fn tcp_stream_echo_pattern() {
 
 #[test]
 fn echo_random() {
-    let v = thread_rng().gen_iter::<u8>().take(1024 * 1024).collect::<Vec<_>>();
+    let mut v = vec![0; 1024 * 1024];
+    thread_rng().fill(v.as_mut_slice());
     let mut core = Core::new().unwrap();
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let addr = listener.local_addr().unwrap();
