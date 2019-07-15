@@ -167,12 +167,76 @@ impl<R: AsyncWrite + Read> AsyncWrite for BzDecoder<R> {
     }
 }
 
+/// A bzip2 streaming decoder that decodes all members of a multistream
+///
+/// Wikipedia, particularly, uses bzip2 multistream for their dumps.
+pub struct MultiBzDecoder<R> {
+    inner: bufread::MultiBzDecoder<BufReader<R>>,
+}
+
+impl<R: Read> MultiBzDecoder<R> {
+    /// Creates a new decoder from the given reader, immediately parsing the
+    /// (first) gzip header. If the gzip stream contains multiple members all will
+    /// be decoded.
+    pub fn new(r: R) -> MultiBzDecoder<R> {
+        MultiBzDecoder {
+            inner: bufread::MultiBzDecoder::new(BufReader::new(r)),
+        }
+    }
+}
+
+impl<R> MultiBzDecoder<R> {
+    /// Acquires a reference to the underlying reader.
+    pub fn get_ref(&self) -> &R {
+        self.inner.get_ref().get_ref()
+    }
+
+    /// Acquires a mutable reference to the underlying stream.
+    ///
+    /// Note that mutation of the stream may result in surprising results if
+    /// this encoder is continued to be used.
+    pub fn get_mut(&mut self) -> &mut R {
+        self.inner.get_mut().get_mut()
+    }
+
+    /// Consumes this decoder, returning the underlying reader.
+    pub fn into_inner(self) -> R {
+        self.inner.into_inner().into_inner()
+    }
+}
+
+impl<R: Read> Read for MultiBzDecoder<R> {
+    fn read(&mut self, into: &mut [u8]) -> io::Result<usize> {
+        self.inner.read(into)
+    }
+}
+
+#[cfg(feature = "tokio")]
+impl<R: AsyncRead> AsyncRead for MultiBzDecoder<R> {}
+
+impl<R: Read + Write> Write for MultiBzDecoder<R> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.get_mut().write(buf)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        self.get_mut().flush()
+    }
+}
+
+#[cfg(feature = "tokio")]
+impl<R: AsyncWrite + AsyncRead> AsyncWrite for MultiBzDecoder<R> {
+    fn shutdown(&mut self) -> Poll<(), io::Error> {
+        self.get_mut().shutdown()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use partial_io::{GenInterrupted, PartialRead, PartialWithErrors};
     use rand::distributions::Standard;
     use rand::{thread_rng, Rng};
-    use read::{BzDecoder, BzEncoder};
+    use read::{BzDecoder, BzEncoder, MultiBzDecoder};
     use std::io::prelude::*;
     use Compression;
 
@@ -257,6 +321,25 @@ mod tests {
         let mut d = BzDecoder::new(&result[..]);
         let mut data = Vec::new();
         assert!(d.read(&mut data).unwrap() == 0);
+    }
+
+    #[test]
+    fn multistream_read_till_eof() {
+        let m = vec![3u8; 128 * 1024 + 1];
+        let repeat = 3;
+        let mut result = Vec::new();
+
+        for _i in 0..repeat {
+            let mut c = BzEncoder::new(&m[..], Compression::default());
+            c.read_to_end(&mut result).unwrap();
+        }
+
+        let mut d = MultiBzDecoder::new(&result[..]);
+        let mut data = Vec::new();
+
+        let a = d.read_to_end(&mut data).unwrap();
+        let b = m.len() * repeat;
+        assert!(a == b, "{} {}", a, b);
     }
 
     #[test]

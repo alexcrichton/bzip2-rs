@@ -28,6 +28,7 @@ pub struct BzDecoder<R> {
     obj: R,
     data: Decompress,
     done: bool,
+    multi: bool,
 }
 
 impl<R: BufRead> BzEncoder<R> {
@@ -146,7 +147,13 @@ impl<R: BufRead> BzDecoder<R> {
             obj: r,
             data: Decompress::new(false),
             done: false,
+            multi: false,
         }
+    }
+
+    fn multi(mut self, flag: bool) -> BzDecoder<R> {
+        self.multi = flag;
+        self
     }
 }
 
@@ -203,7 +210,12 @@ impl<R: BufRead> Read for BzDecoder<R> {
 
             let ret = try!(ret.map_err(|e| { io::Error::new(io::ErrorKind::InvalidInput, e) }));
             if ret == Status::StreamEnd {
-                self.done = true;
+                if !eof && self.multi {
+                    self.data = Decompress::new(false);
+                } else {
+                    self.done = true;
+                }
+
                 return Ok(read);
             }
             if read > 0 || eof || buf.len() == 0 {
@@ -228,6 +240,65 @@ impl<W: Write> Write for BzDecoder<W> {
 
 #[cfg(feature = "tokio")]
 impl<R: AsyncWrite> AsyncWrite for BzDecoder<R> {
+    fn shutdown(&mut self) -> Poll<(), io::Error> {
+        self.get_mut().shutdown()
+    }
+}
+
+/// A bzip2 streaming decoder that decodes all members of a multistream
+///
+/// Wikipedia, particularly, uses bzip2 multistream for their dumps.
+pub struct MultiBzDecoder<R>(BzDecoder<R>);
+
+impl<R: BufRead> MultiBzDecoder<R> {
+    /// Creates a new decoder from the given reader. If the bzip2 stream contains multiple members
+    /// all will be decoded.
+    pub fn new(r: R) -> MultiBzDecoder<R> {
+        MultiBzDecoder(BzDecoder::new(r).multi(true))
+    }
+}
+
+impl<R> MultiBzDecoder<R> {
+    /// Acquires a reference to the underlying reader.
+    pub fn get_ref(&self) -> &R {
+        self.0.get_ref()
+    }
+
+    /// Acquires a mutable reference to the underlying stream.
+    ///
+    /// Note that mutation of the stream may result in surprising results if
+    /// this encoder is continued to be used.
+    pub fn get_mut(&mut self) -> &mut R {
+        self.0.get_mut()
+    }
+
+    /// Consumes this decoder, returning the underlying reader.
+    pub fn into_inner(self) -> R {
+        self.0.into_inner()
+    }
+}
+
+impl<R: BufRead> Read for MultiBzDecoder<R> {
+    fn read(&mut self, into: &mut [u8]) -> io::Result<usize> {
+        self.0.read(into)
+    }
+}
+
+#[cfg(feature = "tokio")]
+impl<R: AsyncRead + BufRead> AsyncRead for MultiBzDecoder<R> {}
+
+impl<R: BufRead + Write> Write for MultiBzDecoder<R> {
+    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
+        self.get_mut().write(buf)
+    }
+
+    fn flush(&mut self) -> io::Result<()> {
+        self.get_mut().flush()
+    }
+}
+
+#[cfg(feature = "tokio")]
+impl<R: AsyncWrite + BufRead> AsyncWrite for MultiBzDecoder<R> {
     fn shutdown(&mut self) -> Poll<(), io::Error> {
         self.get_mut().shutdown()
     }
