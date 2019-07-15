@@ -233,12 +233,12 @@ impl<R: AsyncWrite + AsyncRead> AsyncWrite for MultiBzDecoder<R> {
 
 #[cfg(test)]
 mod tests {
-    use std::io::prelude::*;
-    use read::{BzEncoder, BzDecoder, MultiBzDecoder};
-    use Compression;
-    use rand::{thread_rng, Rng};
-    use rand::distributions::Standard;
     use partial_io::{GenInterrupted, PartialRead, PartialWithErrors};
+    use rand::distributions::Standard;
+    use rand::{thread_rng, Rng};
+    use read::{BzDecoder, BzEncoder, MultiBzDecoder};
+    use std::io::prelude::*;
+    use Compression;
 
     #[test]
     fn smoke() {
@@ -280,14 +280,19 @@ mod tests {
         let mut result = Vec::new();
         c.read_to_end(&mut result).unwrap();
 
-        let v = thread_rng().sample_iter(&Standard).take(1024).collect::<Vec<_>>();
+        let v = thread_rng()
+            .sample_iter(&Standard)
+            .take(1024)
+            .collect::<Vec<_>>();
         for _ in 0..200 {
             result.extend(v.iter().map(|x: &u8| *x));
         }
 
         let mut d = BzDecoder::new(&result[..]);
         let mut data = Vec::with_capacity(m.len());
-        unsafe { data.set_len(m.len()); }
+        unsafe {
+            data.set_len(m.len());
+        }
         assert!(d.read(&mut data).unwrap() == m.len());
         assert!(data == &m[..]);
     }
@@ -363,9 +368,11 @@ mod tests {
     fn qc_partial() {
         ::quickcheck::quickcheck(test as fn(_, _, _) -> _);
 
-        fn test(v: Vec<u8>,
-                encode_ops: PartialWithErrors<GenInterrupted>,
-                decode_ops: PartialWithErrors<GenInterrupted>) -> bool {
+        fn test(
+            v: Vec<u8>,
+            encode_ops: PartialWithErrors<GenInterrupted>,
+            decode_ops: PartialWithErrors<GenInterrupted>,
+        ) -> bool {
             let r = BzEncoder::new(PartialRead::new(&v[..], encode_ops), Compression::default());
             let mut r = BzDecoder::new(PartialRead::new(r, decode_ops));
             let mut v2 = Vec::new();

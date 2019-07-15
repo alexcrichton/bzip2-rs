@@ -2,7 +2,7 @@
 
 extern crate libc;
 
-use libc::{c_int, c_uint, c_void, c_char};
+use libc::{c_char, c_int, c_uint, c_void};
 
 pub const BZ_RUN: c_int = 0;
 pub const BZ_FLUSH: c_int = 1;
@@ -37,8 +37,8 @@ pub struct bz_stream {
 
     pub state: *mut c_void,
 
-    pub bzalloc: Option<extern fn(*mut c_void, c_int, c_int) -> *mut c_void>,
-    pub bzfree: Option<extern fn(*mut c_void, *mut c_void)>,
+    pub bzalloc: Option<extern "C" fn(*mut c_void, c_int, c_int) -> *mut c_void>,
+    pub bzfree: Option<extern "C" fn(*mut c_void, *mut c_void)>,
     pub opaque: *mut c_void,
 }
 

@@ -1,24 +1,24 @@
 #![cfg(feature = "tokio")]
 
-extern crate tokio_core;
 extern crate bzip2;
-extern crate tokio_io;
 extern crate futures;
 extern crate rand;
+extern crate tokio_core;
+extern crate tokio_io;
 
-use std::thread;
-use std::net::{Shutdown, TcpListener};
 use std::io::{Read, Write};
+use std::net::{Shutdown, TcpListener};
+use std::thread;
 
-use bzip2::Compression;
 use bzip2::read;
 use bzip2::write;
+use bzip2::Compression;
 use futures::Future;
-use rand::{Rng, thread_rng};
+use rand::{thread_rng, Rng};
 use tokio_core::net::TcpStream;
 use tokio_core::reactor::Core;
-use tokio_io::AsyncRead;
 use tokio_io::io::{copy, shutdown};
+use tokio_io::AsyncRead;
 
 #[test]
 fn tcp_stream_echo_pattern() {
@@ -50,24 +50,25 @@ fn tcp_stream_echo_pattern() {
             let buf = [i; M];
             a.write_all(&buf).unwrap();
         }
-        a.finish().unwrap()
-         .shutdown(Shutdown::Write).unwrap();
+        a.finish().unwrap().shutdown(Shutdown::Write).unwrap();
 
         t.join().unwrap();
     });
 
     let handle = core.handle();
     let stream = TcpStream::connect(&addr, &handle);
-    let copy = stream.and_then(|s| {
-        let (a, b) = s.split();
-        let a = read::BzDecoder::new(a);
-        let b = write::BzEncoder::new(b, Compression::default());
-        copy(a, b)
-    }).then(|result| {
-        let (amt, _a, b) = result.unwrap();
-        assert_eq!(amt, (N as u64) * (M as u64));
-        shutdown(b).map(|_| ())
-    });
+    let copy = stream
+        .and_then(|s| {
+            let (a, b) = s.split();
+            let a = read::BzDecoder::new(a);
+            let b = write::BzEncoder::new(b, Compression::default());
+            copy(a, b)
+        })
+        .then(|result| {
+            let (amt, _a, b) = result.unwrap();
+            assert_eq!(amt, (N as u64) * (M as u64));
+            shutdown(b).map(|_| ())
+        });
 
     core.run(copy).unwrap();
     t.join().unwrap();
@@ -102,24 +103,25 @@ fn echo_random() {
 
         let mut a = write::BzEncoder::new(a, Compression::default());
         a.write_all(&v2).unwrap();
-        a.finish().unwrap()
-         .shutdown(Shutdown::Write).unwrap();
+        a.finish().unwrap().shutdown(Shutdown::Write).unwrap();
 
         t.join().unwrap();
     });
 
     let handle = core.handle();
     let stream = TcpStream::connect(&addr, &handle);
-    let copy = stream.and_then(|s| {
-        let (a, b) = s.split();
-        let a = read::BzDecoder::new(a);
-        let b = write::BzEncoder::new(b, Compression::default());
-        copy(a, b)
-    }).then(|result| {
-        let (amt, _a, b) = result.unwrap();
-        assert_eq!(amt, v.len() as u64);
-        shutdown(b).map(|_| ())
-    });
+    let copy = stream
+        .and_then(|s| {
+            let (a, b) = s.split();
+            let a = read::BzDecoder::new(a);
+            let b = write::BzEncoder::new(b, Compression::default());
+            copy(a, b)
+        })
+        .then(|result| {
+            let (amt, _a, b) = result.unwrap();
+            assert_eq!(amt, v.len() as u64);
+            shutdown(b).map(|_| ())
+        });
 
     core.run(copy).unwrap();
     t.join().unwrap();

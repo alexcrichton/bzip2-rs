@@ -1,14 +1,14 @@
 //! I/O streams for wrapping `BufRead` types as encoders/decoders
 
-use std::io::prelude::*;
 use std::io;
+use std::io::prelude::*;
 
 #[cfg(feature = "tokio")]
 use futures::Poll;
 #[cfg(feature = "tokio")]
 use tokio_io::{AsyncRead, AsyncWrite};
 
-use {Compress, Decompress, Compression, Action, Status};
+use {Action, Compress, Compression, Decompress, Status};
 
 /// A bz2 encoder, or compressor.
 ///
@@ -85,7 +85,7 @@ impl<R> BzEncoder<R> {
 impl<R: BufRead> Read for BzEncoder<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         if self.done {
-            return Ok(0)
+            return Ok(0);
         }
         loop {
             let (read, consumed, eof, ret);
@@ -94,7 +94,7 @@ impl<R: BufRead> Read for BzEncoder<R> {
                 eof = input.is_empty();
                 let before_out = self.data.total_out();
                 let before_in = self.data.total_in();
-                let action = if eof {Action::Finish} else {Action::Run};
+                let action = if eof { Action::Finish } else { Action::Run };
                 ret = self.data.compress(input, buf, action);
                 read = (self.data.total_out() - before_out) as usize;
                 consumed = (self.data.total_in() - before_in) as usize;
@@ -109,19 +109,18 @@ impl<R: BufRead> Read for BzEncoder<R> {
             // need to keep asking for more data because if we return that 0
             // bytes of data have been read then it will be interpreted as EOF.
             if read == 0 && !eof && buf.len() > 0 {
-                continue
+                continue;
             }
             if ret == Status::StreamEnd {
                 self.done = true;
             }
-            return Ok(read)
+            return Ok(read);
         }
     }
 }
 
 #[cfg(feature = "tokio")]
-impl<R: AsyncRead + BufRead> AsyncRead for BzEncoder<R> {
-}
+impl<R: AsyncRead + BufRead> AsyncRead for BzEncoder<R> {}
 
 impl<W: Write> Write for BzEncoder<W> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
@@ -194,7 +193,7 @@ impl<R> BzDecoder<R> {
 impl<R: BufRead> Read for BzDecoder<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
         if self.done {
-            return Ok(0)
+            return Ok(0);
         }
         loop {
             let (read, consumed, eof, ret);
@@ -209,9 +208,7 @@ impl<R: BufRead> Read for BzDecoder<R> {
             }
             self.obj.consume(consumed);
 
-            let ret = try!(ret.map_err(|e| {
-                io::Error::new(io::ErrorKind::InvalidInput, e)
-            }));
+            let ret = try!(ret.map_err(|e| { io::Error::new(io::ErrorKind::InvalidInput, e) }));
             if ret == Status::StreamEnd {
                 if !eof && self.multi {
                     self.data = Decompress::new(false);
@@ -222,15 +219,14 @@ impl<R: BufRead> Read for BzDecoder<R> {
                 return Ok(read)
             }
             if read > 0 || eof || buf.len() == 0 {
-                return Ok(read)
+                return Ok(read);
             }
         }
     }
 }
 
 #[cfg(feature = "tokio")]
-impl<R: AsyncRead + BufRead> AsyncRead for BzDecoder<R> {
-}
+impl<R: AsyncRead + BufRead> AsyncRead for BzDecoder<R> {}
 
 impl<W: Write> Write for BzDecoder<W> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
