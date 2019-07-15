@@ -1,14 +1,14 @@
 //! Writer-based compression/decompression streams
 
-use std::io::prelude::*;
 use std::io;
+use std::io::prelude::*;
 
 #[cfg(feature = "tokio")]
 use futures::Poll;
 #[cfg(feature = "tokio")]
 use tokio_io::{AsyncRead, AsyncWrite};
 
-use {Action, Status, Compression, Compress, Decompress};
+use {Action, Compress, Compression, Decompress, Status};
 
 /// A compression stream which will have uncompressed data written to it and
 /// will write compressed data to an output stream.
@@ -81,7 +81,7 @@ impl<W: Write> BzEncoder<W> {
             let res = self.data.compress_vec(&[], &mut self.buf, Action::Finish);
             if res == Ok(Status::StreamEnd) {
                 self.done = true;
-                break
+                break;
             }
         }
         self.dump()
@@ -124,12 +124,13 @@ impl<W: Write> Write for BzEncoder<W> {
             try!(self.dump());
 
             let total_in = self.total_in();
-            self.data.compress_vec(data, &mut self.buf, Action::Run)
+            self.data
+                .compress_vec(data, &mut self.buf, Action::Run)
                 .unwrap();
             let written = (self.total_in() - total_in) as usize;
 
             if written > 0 || data.len() == 0 {
-                return Ok(written)
+                return Ok(written);
             }
         }
     }
@@ -138,11 +139,12 @@ impl<W: Write> Write for BzEncoder<W> {
         loop {
             try!(self.dump());
             let before = self.total_out();
-            self.data.compress_vec(&[], &mut self.buf, Action::Flush)
+            self.data
+                .compress_vec(&[], &mut self.buf, Action::Flush)
                 .unwrap();
 
             if before == self.total_out() {
-                break
+                break;
             }
         }
         self.obj.as_mut().unwrap().flush()
@@ -164,8 +166,7 @@ impl<W: Read + Write> Read for BzEncoder<W> {
 }
 
 #[cfg(feature = "tokio")]
-impl<W: AsyncRead + AsyncWrite> AsyncRead for BzEncoder<W> {
-}
+impl<W: AsyncRead + AsyncWrite> AsyncRead for BzEncoder<W> {}
 
 impl<W: Write> Drop for BzEncoder<W> {
     fn drop(&mut self) {
@@ -260,7 +261,7 @@ impl<W: Write> BzDecoder<W> {
 impl<W: Write> Write for BzDecoder<W> {
     fn write(&mut self, data: &[u8]) -> io::Result<usize> {
         if self.done {
-            return Ok(0)
+            return Ok(0);
         }
         loop {
             try!(self.dump());
@@ -269,15 +270,13 @@ impl<W: Write> Write for BzDecoder<W> {
             let res = self.data.decompress_vec(data, &mut self.buf);
             let written = (self.total_in() - before) as usize;
 
-            let res = try!(res.map_err(|e| {
-                io::Error::new(io::ErrorKind::InvalidInput, e)
-            }));
+            let res = try!(res.map_err(|e| { io::Error::new(io::ErrorKind::InvalidInput, e) }));
 
             if res == Status::StreamEnd {
                 self.done = true;
             }
             if written > 0 || data.len() == 0 || self.done {
-                return Ok(written)
+                return Ok(written);
             }
         }
     }
@@ -303,8 +302,7 @@ impl<W: Read + Write> Read for BzDecoder<W> {
 }
 
 #[cfg(feature = "tokio")]
-impl<W: AsyncRead + AsyncWrite> AsyncRead for BzDecoder<W> {
-}
+impl<W: AsyncRead + AsyncWrite> AsyncRead for BzDecoder<W> {}
 
 impl<W: Write> Drop for BzDecoder<W> {
     fn drop(&mut self) {
@@ -316,10 +314,10 @@ impl<W: Write> Drop for BzDecoder<W> {
 
 #[cfg(test)]
 mod tests {
+    use super::{BzDecoder, BzEncoder};
+    use partial_io::{GenInterrupted, PartialWithErrors, PartialWrite};
     use std::io::prelude::*;
     use std::iter::repeat;
-    use partial_io::{GenInterrupted, PartialWithErrors, PartialWrite};
-    use super::{BzEncoder, BzDecoder};
 
     #[test]
     fn smoke() {
@@ -359,13 +357,21 @@ mod tests {
     fn qc_partial() {
         ::quickcheck::quickcheck(test as fn(_, _, _) -> _);
 
-        fn test(v: Vec<u8>,
-                encode_ops: PartialWithErrors<GenInterrupted>,
-                decode_ops: PartialWithErrors<GenInterrupted>) -> bool {
+        fn test(
+            v: Vec<u8>,
+            encode_ops: PartialWithErrors<GenInterrupted>,
+            decode_ops: PartialWithErrors<GenInterrupted>,
+        ) -> bool {
             let w = BzDecoder::new(PartialWrite::new(Vec::new(), decode_ops));
             let mut w = BzEncoder::new(PartialWrite::new(w, encode_ops), ::Compression::default());
             w.write_all(&v).unwrap();
-            v == w.finish().unwrap().into_inner().finish().unwrap().into_inner()
+            v == w
+                .finish()
+                .unwrap()
+                .into_inner()
+                .finish()
+                .unwrap()
+                .into_inner()
         }
     }
 }

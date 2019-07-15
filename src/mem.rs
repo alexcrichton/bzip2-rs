@@ -120,10 +120,15 @@ impl Compress {
     pub fn new(lvl: Compression, work_factor: u32) -> Compress {
         unsafe {
             let mut raw = Box::new(mem::zeroed());
-            assert_eq!(ffi::BZ2_bzCompressInit(&mut *raw, lvl.level() as c_int, 0,
-                                               work_factor as c_int), 0);
+            assert_eq!(
+                ffi::BZ2_bzCompressInit(&mut *raw, lvl.level() as c_int, 0, work_factor as c_int),
+                0
+            );
             Compress {
-                inner: Stream { raw: raw, _marker: marker::PhantomData },
+                inner: Stream {
+                    raw: raw,
+                    _marker: marker::PhantomData,
+                },
             }
         }
     }
@@ -132,13 +137,17 @@ impl Compress {
     ///
     /// If anything other than BZ_OK is seen, `Err` is returned. The action
     /// given must be one of Run, Flush or Finish.
-    pub fn compress(&mut self, input: &[u8], output: &mut [u8],
-                    action: Action) -> Result<Status, Error> {
+    pub fn compress(
+        &mut self,
+        input: &[u8],
+        output: &mut [u8],
+        action: Action,
+    ) -> Result<Status, Error> {
         // apparently 0-length compression requests which don't actually make
         // any progress are returned as BZ_PARAM_ERROR, which we don't want, to
         // just translate to a success here.
         if input.len() == 0 && action == Action::Run {
-            return Ok(Status::RunOk)
+            return Ok(Status::RunOk);
         }
         self.inner.raw.next_in = input.as_ptr() as *mut _;
         self.inner.raw.avail_in = input.len() as c_uint;
@@ -161,10 +170,12 @@ impl Compress {
     /// This function will not grow `output`, but it will fill the space after
     /// its current length up to its capacity. The length of the vector will be
     /// adjusted appropriately.
-    pub fn compress_vec(&mut self,
-                        input: &[u8],
-                        output: &mut Vec<u8>,
-                        action: Action) -> Result<Status, Error> {
+    pub fn compress_vec(
+        &mut self,
+        input: &[u8],
+        output: &mut Vec<u8>,
+        action: Action,
+    ) -> Result<Status, Error> {
         let cap = output.capacity();
         let len = output.len();
 
@@ -176,7 +187,7 @@ impl Compress {
                 self.compress(input, out, action)
             };
             output.set_len((self.total_out() - before) as usize + len);
-            return ret
+            return ret;
         }
     }
 
@@ -203,14 +214,16 @@ impl Decompress {
             let mut raw = Box::new(mem::zeroed());
             assert_eq!(ffi::BZ2_bzDecompressInit(&mut *raw, 0, small as c_int), 0);
             Decompress {
-                inner: Stream { raw: raw, _marker: marker::PhantomData },
+                inner: Stream {
+                    raw: raw,
+                    _marker: marker::PhantomData,
+                },
             }
         }
     }
 
     /// Decompress a block of input into a block of output.
-    pub fn decompress(&mut self, input: &[u8], output: &mut [u8])
-                      -> Result<Status, Error> {
+    pub fn decompress(&mut self, input: &[u8], output: &mut [u8]) -> Result<Status, Error> {
         self.inner.raw.next_in = input.as_ptr() as *mut _;
         self.inner.raw.avail_in = input.len() as c_uint;
         self.inner.raw.next_out = output.as_mut_ptr() as *mut _;
@@ -234,8 +247,7 @@ impl Decompress {
     /// This function will not grow `output`, but it will fill the space after
     /// its current length up to its capacity. The length of the vector will be
     /// adjusted appropriately.
-    pub fn decompress_vec(&mut self, input: &[u8], output: &mut Vec<u8>)
-                          -> Result<Status, Error> {
+    pub fn decompress_vec(&mut self, input: &[u8], output: &mut Vec<u8>) -> Result<Status, Error> {
         let cap = output.capacity();
         let len = output.len();
 
@@ -247,7 +259,7 @@ impl Decompress {
                 self.decompress(input, out)
             };
             output.set_len((self.total_out() - before) as usize + len);
-            return ret
+            return ret;
         }
     }
 
@@ -264,18 +276,18 @@ impl Decompress {
 
 impl<D: Direction> Stream<D> {
     fn total_in(&self) -> u64 {
-        (self.raw.total_in_lo32 as u64) |
-        ((self.raw.total_in_hi32 as u64) << 32)
+        (self.raw.total_in_lo32 as u64) | ((self.raw.total_in_hi32 as u64) << 32)
     }
 
     fn total_out(&self) -> u64 {
-        (self.raw.total_out_lo32 as u64) |
-        ((self.raw.total_out_hi32 as u64) << 32)
+        (self.raw.total_out_lo32 as u64) | ((self.raw.total_out_hi32 as u64) << 32)
     }
 }
 
 impl error::Error for Error {
-    fn description(&self) -> &str { "bz2 data error" }
+    fn description(&self) -> &str {
+        "bz2 data error"
+    }
 }
 
 impl fmt::Display for Error {

@@ -1,7 +1,7 @@
 extern crate cc;
 
-use std::{env, fs};
 use std::path::PathBuf;
+use std::{env, fs};
 
 fn main() {
     let mut cfg = cc::Build::new();
@@ -15,17 +15,17 @@ fn main() {
     let dst = PathBuf::from(env::var_os("OUT_DIR").unwrap());
 
     cfg.include("bzip2-1.0.6")
-       .define("_FILE_OFFSET_BITS", Some("64"))
-       .define("BZ_NO_STDIO", None)
-       .file("bzip2-1.0.6/blocksort.c")
-       .file("bzip2-1.0.6/huffman.c")
-       .file("bzip2-1.0.6/crctable.c")
-       .file("bzip2-1.0.6/randtable.c")
-       .file("bzip2-1.0.6/compress.c")
-       .file("bzip2-1.0.6/decompress.c")
-       .file("bzip2-1.0.6/bzlib.c")
-       .out_dir(dst.join("lib"))
-       .compile("libbz2.a");
+        .define("_FILE_OFFSET_BITS", Some("64"))
+        .define("BZ_NO_STDIO", None)
+        .file("bzip2-1.0.6/blocksort.c")
+        .file("bzip2-1.0.6/huffman.c")
+        .file("bzip2-1.0.6/crctable.c")
+        .file("bzip2-1.0.6/randtable.c")
+        .file("bzip2-1.0.6/compress.c")
+        .file("bzip2-1.0.6/decompress.c")
+        .file("bzip2-1.0.6/bzlib.c")
+        .out_dir(dst.join("lib"))
+        .compile("libbz2.a");
 
     let src = env::current_dir().unwrap().join("bzip2-1.0.6");
     let include = dst.join("include");
