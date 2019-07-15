@@ -216,7 +216,7 @@ impl<R: BufRead> Read for BzDecoder<R> {
                     self.done = true;
                 }
 
-                return Ok(read)
+                return Ok(read);
             }
             if read > 0 || eof || buf.len() == 0 {
                 return Ok(read);
