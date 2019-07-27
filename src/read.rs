@@ -183,9 +183,7 @@ impl<R: Read> MultiBzDecoder<R> {
             inner: bufread::MultiBzDecoder::new(BufReader::new(r)),
         }
     }
-}
 
-impl<R> MultiBzDecoder<R> {
     /// Acquires a reference to the underlying reader.
     pub fn get_ref(&self) -> &R {
         self.inner.get_ref().get_ref()
