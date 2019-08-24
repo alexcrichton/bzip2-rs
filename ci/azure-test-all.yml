@@ -1,7 +1,0 @@
-steps:
-  - template: azure-install-rust.yml
-
-  - bash: cargo test
-    displayName: "cargo test"
-  - bash: cargo test --features tokio
-    displayName: "cargo test --features tokio"

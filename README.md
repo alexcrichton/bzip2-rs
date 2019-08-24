@@ -1,7 +1,5 @@
 # bzip2
 
-[![Build Status](https://dev.azure.com/alexcrichton/bzip2-rs/_apis/build/status/alexcrichton.bzip2-rs?branchName=master)](https://dev.azure.com/alexcrichton/bzip2-rs/_build/latest?definitionId=13&branchName=master)
-
 [Documentation](https://docs.rs/bzip2)
 
 A streaming compression/decompression library for rust with bindings to libbz2.
