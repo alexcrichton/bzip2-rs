@@ -355,7 +355,7 @@ mod tests {
 
     #[test]
     fn qc_partial() {
-        ::quickcheck::quickcheck(test as fn(_, _, _) -> _);
+        quickcheck6::quickcheck(test as fn(_, _, _) -> _);
 
         fn test(
             v: Vec<u8>,
