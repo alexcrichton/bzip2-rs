@@ -286,7 +286,12 @@ impl<D: Direction> Stream<D> {
 
 impl error::Error for Error {
     fn description(&self) -> &str {
-        "bz2 data error"
+        match self {
+            Error::Sequence => "bzip2: sequence of operations invalid",
+            Error::Data => "bzip2: invalid data",
+            Error::DataMagic => "bzip2: bz2 header missing",
+            Error::Param => "bzip2: invalid parameters",
+        }
     }
 }
 
