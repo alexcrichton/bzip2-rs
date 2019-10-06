@@ -301,6 +301,12 @@ impl fmt::Display for Error {
     }
 }
 
+impl From<Error> for std::io::Error {
+    fn from(data: Error) -> std::io::Error {
+        std::io::Error::new(std::io::ErrorKind::Other, data)
+    }
+}
+
 impl Direction for DirCompress {
     unsafe fn destroy(stream: *mut ffi::bz_stream) -> c_int {
         ffi::BZ2_bzCompressEnd(stream)
