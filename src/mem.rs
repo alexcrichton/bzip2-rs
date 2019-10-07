@@ -286,13 +286,24 @@ impl<D: Direction> Stream<D> {
 
 impl error::Error for Error {
     fn description(&self) -> &str {
-        "bz2 data error"
+        match self {
+            Error::Sequence => "bzip2: sequence of operations invalid",
+            Error::Data => "bzip2: invalid data",
+            Error::DataMagic => "bzip2: bz2 header missing",
+            Error::Param => "bzip2: invalid parameters",
+        }
     }
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         error::Error::description(self).fmt(f)
+    }
+}
+
+impl From<Error> for std::io::Error {
+    fn from(data: Error) -> std::io::Error {
+        std::io::Error::new(std::io::ErrorKind::Other, data)
     }
 }
 
