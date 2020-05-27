@@ -1,15 +1,25 @@
 extern crate cc;
+extern crate pkg_config;
 
 use std::path::PathBuf;
 use std::{env, fs};
 
 fn main() {
     let mut cfg = cc::Build::new();
+    let target = env::var("TARGET").unwrap();
     cfg.warnings(false);
 
-    if env::var("TARGET").unwrap().contains("windows") {
+    if target.contains("windows") {
         cfg.define("_WIN32", None);
         cfg.define("BZ_EXPORT", None);
+    } else {
+        if pkg_config::Config::new()
+            .cargo_metadata(true)
+            .probe("bzip2")
+            .is_ok()
+        {
+            return;
+        }
     }
 
     let dst = PathBuf::from(env::var_os("OUT_DIR").unwrap());
