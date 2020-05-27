@@ -13,7 +13,11 @@ fn main() {
         cfg.define("_WIN32", None);
         cfg.define("BZ_EXPORT", None);
     } else {
-        if pkg_config::Config::new().cargo_metadata(true).probe("bzip2").is_ok() {
+        if pkg_config::Config::new()
+            .cargo_metadata(true)
+            .probe("bzip2")
+            .is_ok()
+        {
             return;
         }
     }
