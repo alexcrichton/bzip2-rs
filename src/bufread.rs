@@ -245,9 +245,10 @@ impl<R: AsyncWrite> AsyncWrite for BzDecoder<R> {
     }
 }
 
-/// A bzip2 streaming decoder that decodes all members of a multistream
+/// A bzip2 streaming decoder that decodes all members of a multistream.
 ///
-/// Wikipedia, particularly, uses bzip2 multistream for their dumps.
+/// Wikipedia, particularly, uses bzip2 multistream for their dumps, and the
+/// `pbzip2` tool creates such data as well;
 pub struct MultiBzDecoder<R>(BzDecoder<R>);
 
 impl<R: BufRead> MultiBzDecoder<R> {

@@ -27,6 +27,19 @@
 //! assert_eq!(contents, "Hello, World!");
 //! ```
 //!
+//! # Multistreams (e.g. Wikipedia or pbzip2)
+//!
+//! Some tools such as pbzip2 or data from sources such as Wikipedia
+//! are encoded as so called bzip2 "multistreams," meaning they
+//! contain back to back chunks of bzip'd data. `BzDecoder` does not
+//! attempt to convert anything after the the first bzip chunk in the
+//! source stream. Thus, if you wish to decode all bzip chunks from
+//! the input until end of file, use `MultiBzDecoder`.
+//!
+//! *Protip*: If you use `BzDecoder` to decode data and the output is
+//! incomplete and exactly 900K bytes, you probably need a
+//! `MultiBzDecoder`.
+//!
 //! # Async I/O
 //!
 //! This crate optionally can support async I/O streams with the Tokio stack via
