@@ -90,7 +90,7 @@ impl<R: BufRead> Read for BzEncoder<R> {
         loop {
             let (read, consumed, eof, ret);
             {
-                let input = try!(self.obj.fill_buf());
+                let input = self.obj.fill_buf()?;
                 eof = input.is_empty();
                 let before_out = self.data.total_out();
                 let before_in = self.data.total_in();
@@ -198,7 +198,7 @@ impl<R: BufRead> Read for BzDecoder<R> {
         loop {
             let (read, consumed, eof, ret);
             {
-                let input = try!(self.obj.fill_buf());
+                let input = self.obj.fill_buf()?;
                 eof = input.is_empty();
                 let before_out = self.data.total_out();
                 let before_in = self.data.total_in();
@@ -208,7 +208,7 @@ impl<R: BufRead> Read for BzDecoder<R> {
             }
             self.obj.consume(consumed);
 
-            let ret = try!(ret.map_err(|e| { io::Error::new(io::ErrorKind::InvalidInput, e) }));
+            let ret = ret.map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
             if ret == Status::StreamEnd {
                 if !eof && self.multi {
                     self.data = Decompress::new(false);

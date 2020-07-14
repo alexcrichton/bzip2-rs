@@ -77,7 +77,7 @@ impl<W: Write> BzEncoder<W> {
     /// function is called.
     pub fn try_finish(&mut self) -> io::Result<()> {
         while !self.done {
-            try!(self.dump());
+            self.dump()?;
             let res = self.data.compress_vec(&[], &mut self.buf, Action::Finish);
             if res == Ok(Status::StreamEnd) {
                 self.done = true;
@@ -98,7 +98,7 @@ impl<W: Write> BzEncoder<W> {
     /// re-acquire ownership of a stream it is safe to call this method after
     /// `try_finish` or `shutdown` has returned `Ok`.
     pub fn finish(mut self) -> io::Result<W> {
-        try!(self.try_finish());
+        self.try_finish()?;
         Ok(self.obj.take().unwrap())
     }
 
@@ -121,7 +121,7 @@ impl<W: Write> BzEncoder<W> {
 impl<W: Write> Write for BzEncoder<W> {
     fn write(&mut self, data: &[u8]) -> io::Result<usize> {
         loop {
-            try!(self.dump());
+            self.dump()?;
 
             let total_in = self.total_in();
             self.data
@@ -137,7 +137,7 @@ impl<W: Write> Write for BzEncoder<W> {
 
     fn flush(&mut self) -> io::Result<()> {
         loop {
-            try!(self.dump());
+            self.dump()?;
             let before = self.total_out();
             self.data
                 .compress_vec(&[], &mut self.buf, Action::Flush)
@@ -225,7 +225,7 @@ impl<W: Write> BzDecoder<W> {
     /// function is called.
     pub fn try_finish(&mut self) -> io::Result<()> {
         while !self.done {
-            try!(self.write(&[]));
+            self.write(&[])?;
         }
         self.dump()
     }
@@ -238,7 +238,7 @@ impl<W: Write> BzDecoder<W> {
     /// re-acquire ownership of a stream it is safe to call this method after
     /// `try_finish` or `shutdown` has returned `Ok`.
     pub fn finish(&mut self) -> io::Result<W> {
-        try!(self.try_finish());
+        self.try_finish()?;
         Ok(self.obj.take().unwrap())
     }
 
@@ -264,13 +264,13 @@ impl<W: Write> Write for BzDecoder<W> {
             return Ok(0);
         }
         loop {
-            try!(self.dump());
+            self.dump()?;
 
             let before = self.total_in();
             let res = self.data.decompress_vec(data, &mut self.buf);
             let written = (self.total_in() - before) as usize;
 
-            let res = try!(res.map_err(|e| { io::Error::new(io::ErrorKind::InvalidInput, e) }));
+            let res = res.map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
 
             if res == Status::StreamEnd {
                 self.done = true;
@@ -282,7 +282,7 @@ impl<W: Write> Write for BzDecoder<W> {
     }
 
     fn flush(&mut self) -> io::Result<()> {
-        try!(self.dump());
+        self.dump()?;
         self.obj.as_mut().unwrap().flush()
     }
 }
