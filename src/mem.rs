@@ -284,20 +284,17 @@ impl<D: Direction> Stream<D> {
     }
 }
 
-impl error::Error for Error {
-    fn description(&self) -> &str {
-        match self {
+impl error::Error for Error {}
+
+impl fmt::Display for Error {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let description = match self {
             Error::Sequence => "bzip2: sequence of operations invalid",
             Error::Data => "bzip2: invalid data",
             Error::DataMagic => "bzip2: bz2 header missing",
             Error::Param => "bzip2: invalid parameters",
-        }
-    }
-}
-
-impl fmt::Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        error::Error::description(self).fmt(f)
+        };
+        f.write_str(description)
     }
 }
 
