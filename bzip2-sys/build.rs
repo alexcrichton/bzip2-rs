@@ -1,10 +1,12 @@
 extern crate cc;
 extern crate pkg_config;
 
+use std::env;
+use std::fs::{self, File};
+use std::io;
 use std::path::PathBuf;
-use std::{env, fs};
 
-fn main() {
+fn main() -> io::Result<()> {
     let mut cfg = cc::Build::new();
     let target = env::var("TARGET").unwrap();
     cfg.warnings(false);
@@ -18,11 +20,11 @@ fn main() {
             .probe("bzip2")
             .is_ok()
         {
-            return;
+            return Ok(());
         }
     }
 
-    let dst = PathBuf::from(env::var_os("OUT_DIR").unwrap());
+    let dst = PathBuf::from(env::var_os("OUT_DIR").expect("no OUT_DIR env variable"));
 
     cfg.include("bzip2-1.0.8")
         .define("_FILE_OFFSET_BITS", Some("64"))
@@ -37,10 +39,16 @@ fn main() {
         .out_dir(dst.join("lib"))
         .compile("libbz2.a");
 
-    let src = env::current_dir().unwrap().join("bzip2-1.0.8");
+    let src = env::current_dir()?.join("bzip2-1.0.8");
     let include = dst.join("include");
-    fs::create_dir_all(&include).unwrap();
-    fs::copy(src.join("bzlib.h"), dst.join("include/bzlib.h")).unwrap();
+    fs::create_dir_all(&include)?;
+    // note: not using fs::copy because destination file permissions don't matter
+    io::copy(
+        &mut File::open(src.join("bzlib.h"))?,
+        &mut File::create(dst.join("include/bzlib.h"))?,
+    )?;
     println!("cargo:root={}", dst.display());
     println!("cargo:include={}", dst.join("include").display());
+
+    Ok(())
 }
