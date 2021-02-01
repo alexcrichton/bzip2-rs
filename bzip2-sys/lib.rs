@@ -48,7 +48,7 @@ macro_rules! abi_compat {
         extern "system" {
             $(pub fn $name($($arg: $t),*) -> $ret;)*
         }
-        #[cfg(any(unix, target_os = "redox"))]
+        #[cfg(not(windows))]
         extern {
             $(pub fn $name($($arg: $t),*) -> $ret;)*
         }
