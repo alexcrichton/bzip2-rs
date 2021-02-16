@@ -192,33 +192,44 @@ impl<R> BzDecoder<R> {
 
 impl<R: BufRead> Read for BzDecoder<R> {
     fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        if self.done {
-            return Ok(0);
-        }
         loop {
-            let (read, consumed, eof, ret);
+            if self.done && !self.multi {
+                return Ok(0);
+            }
+            let (read, consumed, remaining, ret);
             {
                 let input = self.obj.fill_buf()?;
-                eof = input.is_empty();
+                if self.done {
+                    assert!(self.multi);
+                    if input.is_empty() {
+                        // beyond last stream in multi-stream case
+                        return Ok(0);
+                    } else {
+                        // previous stream ended, more data follows => create new decompressor
+                        self.data = Decompress::new(false);
+                        self.done = false;
+                    }
+                }
                 let before_out = self.data.total_out();
                 let before_in = self.data.total_in();
                 ret = self.data.decompress(input, buf);
                 read = (self.data.total_out() - before_out) as usize;
                 consumed = (self.data.total_in() - before_in) as usize;
+                remaining = input.len() - consumed;
             }
             self.obj.consume(consumed);
 
             let ret = ret.map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
             if ret == Status::StreamEnd {
-                if !eof && self.multi {
-                    self.data = Decompress::new(false);
-                } else {
-                    self.done = true;
-                }
-
-                return Ok(read);
+                self.done = true;
+            } else if consumed == 0 && remaining == 0 && read == 0 {
+                return Err(io::Error::new(
+                    io::ErrorKind::UnexpectedEof,
+                    "decompression not finished but EOF reached",
+                ));
             }
-            if read > 0 || eof || buf.len() == 0 {
+
+            if read > 0 || buf.len() == 0 {
                 return Ok(read);
             }
         }
