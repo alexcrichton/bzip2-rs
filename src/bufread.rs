@@ -315,3 +315,25 @@ impl<R: AsyncWrite + BufRead> AsyncWrite for MultiBzDecoder<R> {
         self.get_mut().shutdown()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::MultiBzDecoder;
+    use std::io::{BufReader, Read};
+
+    #[test]
+    fn bug_61() {
+        let compressed_bytes = include_bytes!("../tests/bug_61.bz2");
+        let uncompressed_bytes = include_bytes!("../tests/bug_61.raw");
+        let reader = BufReader::with_capacity(8192, compressed_bytes.as_ref());
+
+        let mut d = MultiBzDecoder::new(reader);
+        let mut data = Vec::new();
+
+        assert_eq!(d.read_to_end(&mut data).unwrap(), uncompressed_bytes.len());
+        assert_eq!(data, uncompressed_bytes);
+
+
+    }
+
+}
