@@ -332,8 +332,5 @@ mod tests {
 
         assert_eq!(d.read_to_end(&mut data).unwrap(), uncompressed_bytes.len());
         assert_eq!(data, uncompressed_bytes);
-
-
     }
-
 }
