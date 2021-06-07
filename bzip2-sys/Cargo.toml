@@ -24,3 +24,7 @@ libc = "0.2"
 [build-dependencies]
 pkg-config = "0.3.9"
 cc = "1.0"
+
+[features]
+# Enable this feature if you want to have a statically linked bzip2
+static = []

@@ -12,7 +12,8 @@ fn main() {
     if target.contains("windows") {
         cfg.define("_WIN32", None);
         cfg.define("BZ_EXPORT", None);
-    } else {
+    } else if !cfg!(feature = "static") {
+        // pkg-config doesn't guarantee static link
         if pkg_config::Config::new()
             .cargo_metadata(true)
             .probe("bzip2")

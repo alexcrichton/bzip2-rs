@@ -31,3 +31,5 @@ tokio-core = "0.1"
 
 [features]
 tokio = ["tokio-io", "futures"]
+# Enable this feature if you want to have a statically linked bzip2
+static = ["bzip2-sys/static"]
