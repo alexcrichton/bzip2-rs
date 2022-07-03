@@ -35,6 +35,7 @@ fn main() {
         .file("bzip2-1.0.8/compress.c")
         .file("bzip2-1.0.8/decompress.c")
         .file("bzip2-1.0.8/bzlib.c")
+        .flag_if_supported("-flto=thin")
         .out_dir(dst.join("lib"))
         .compile("libbz2.a");
 
