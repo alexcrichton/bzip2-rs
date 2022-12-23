@@ -227,7 +227,14 @@ impl Decompress {
         self.inner.raw.next_in = input.as_ptr() as *mut _;
         self.inner.raw.avail_in = input.len() as c_uint;
         self.inner.raw.next_out = output.as_mut_ptr() as *mut _;
-        self.inner.raw.avail_out = output.len() as c_uint;
+        self.inner.raw.avail_out = {
+            let avail_out = output.len();
+            if (avail_out > 0) && (avail_out & c_uint::MAX as usize == 0) {
+                c_uint::MAX
+            } else {
+                avail_out as c_uint
+            }
+        };
         unsafe {
             match ffi::BZ2_bzDecompress(&mut *self.inner.raw) {
                 ffi::BZ_OK => Ok(Status::Ok),
