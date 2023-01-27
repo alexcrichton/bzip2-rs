@@ -28,3 +28,6 @@ cc = "1.0"
 [features]
 # Enable this feature if you want to have a statically linked bzip2
 static = []
+
+fat-lto = [] # Enable fat-lto, will override thin-lto if specified
+thin-lto = [] # Enable thin-lto, will fallback to fat-lto if not supported

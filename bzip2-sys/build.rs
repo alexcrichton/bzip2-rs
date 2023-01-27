@@ -31,6 +31,16 @@ fn main() {
         .flag_if_supported("-Wl,--gc-sections")
         .flag_if_supported("-Wl,--icf=safe");
 
+    if cfg!(feature = "fat-lto") {
+        cfg.flag_if_supported("-flto");
+    } else if cfg!(feature = "thin-lto") {
+        if cfg.is_flag_supported("-flto=thin").unwrap_or(false) {
+            cfg.flag("-flto=thin");
+        } else {
+            cfg.flag_if_supported("-flto");
+        }
+    }
+
     cfg.include("bzip2-1.0.8")
         .define("_FILE_OFFSET_BITS", Some("64"))
         .define("BZ_NO_STDIO", None)
