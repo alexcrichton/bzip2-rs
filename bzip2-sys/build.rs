@@ -25,6 +25,12 @@ fn main() {
 
     let dst = PathBuf::from(env::var_os("OUT_DIR").unwrap());
 
+    cfg.flag_if_supported("-ffunction-sections")
+        .flag_if_supported("-fdata-sections")
+        .flag_if_supported("-fmerge-all-constants")
+        .flag_if_supported("-Wl,--gc-sections")
+        .flag_if_supported("-Wl,--icf=safe");
+
     cfg.include("bzip2-1.0.8")
         .define("_FILE_OFFSET_BITS", Some("64"))
         .define("BZ_NO_STDIO", None)
