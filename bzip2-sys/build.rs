@@ -41,6 +41,10 @@ fn main() {
         }
     }
 
+    if cfg!(feature = "thin") {
+        cfg.opt_level_str("z");
+    }
+
     cfg.include("bzip2-1.0.8")
         .define("_FILE_OFFSET_BITS", Some("64"))
         .define("BZ_NO_STDIO", None)

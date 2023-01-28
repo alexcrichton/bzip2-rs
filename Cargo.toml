@@ -36,3 +36,5 @@ static = ["bzip2-sys/static"]
 
 fat-lto = ["bzip2-sys/fat-lto"]
 thin-lto = ["bzip2-sys/thin-lto"]
+
+thin = ["bzip2-sys/thin"]
