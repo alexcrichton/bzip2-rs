@@ -25,6 +25,24 @@ fn main() {
 
     let dst = PathBuf::from(env::var_os("OUT_DIR").unwrap());
 
+    cfg.flag_if_supported("-ffunction-sections")
+        .flag_if_supported("-fdata-sections")
+        .flag_if_supported("-fmerge-all-constants");
+
+    if cfg!(feature = "fat-lto") {
+        cfg.flag_if_supported("-flto");
+    } else if cfg!(feature = "thin-lto") {
+        if cfg.is_flag_supported("-flto=thin").unwrap_or(false) {
+            cfg.flag("-flto=thin");
+        } else {
+            cfg.flag_if_supported("-flto");
+        }
+    }
+
+    if cfg!(feature = "thin") {
+        cfg.opt_level_str("z");
+    }
+
     cfg.include("bzip2-1.0.8")
         .define("_FILE_OFFSET_BITS", Some("64"))
         .define("BZ_NO_STDIO", None)
