@@ -126,7 +126,7 @@ impl Compress {
             );
             Compress {
                 inner: Stream {
-                    raw: raw,
+                    raw,
                     _marker: marker::PhantomData,
                 },
             }
@@ -146,7 +146,7 @@ impl Compress {
         // apparently 0-length compression requests which don't actually make
         // any progress are returned as BZ_PARAM_ERROR, which we don't want, to
         // just translate to a success here.
-        if input.len() == 0 && action == Action::Run {
+        if input.is_empty() && action == Action::Run {
             return Ok(Status::RunOk);
         }
         self.inner.raw.next_in = input.as_ptr() as *mut _;
@@ -182,12 +182,12 @@ impl Compress {
         unsafe {
             let before = self.total_out();
             let ret = {
-                let ptr = output.as_mut_ptr().offset(len as isize);
+                let ptr = output.as_mut_ptr().add(len);
                 let out = slice::from_raw_parts_mut(ptr, cap - len);
                 self.compress(input, out, action)
             };
             output.set_len((self.total_out() - before) as usize + len);
-            return ret;
+            ret
         }
     }
 
@@ -215,7 +215,7 @@ impl Decompress {
             assert_eq!(ffi::BZ2_bzDecompressInit(&mut *raw, 0, small as c_int), 0);
             Decompress {
                 inner: Stream {
-                    raw: raw,
+                    raw,
                     _marker: marker::PhantomData,
                 },
             }
@@ -254,12 +254,12 @@ impl Decompress {
         unsafe {
             let before = self.total_out();
             let ret = {
-                let ptr = output.as_mut_ptr().offset(len as isize);
+                let ptr = output.as_mut_ptr().add(len);
                 let out = slice::from_raw_parts_mut(ptr, cap - len);
                 self.decompress(input, out)
             };
             output.set_len((self.total_out() - before) as usize + len);
-            return ret;
+            ret
         }
     }
 

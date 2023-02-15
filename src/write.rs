@@ -41,7 +41,7 @@ impl<W: Write> BzEncoder<W> {
     }
 
     fn dump(&mut self) -> io::Result<()> {
-        while self.buf.len() > 0 {
+        while self.buf.is_empty() {
             let n = match self.obj.as_mut().unwrap().write(&self.buf) {
                 Ok(n) => n,
                 Err(ref err) if err.kind() == io::ErrorKind::Interrupted => continue,
@@ -129,7 +129,7 @@ impl<W: Write> Write for BzEncoder<W> {
                 .unwrap();
             let written = (self.total_in() - total_in) as usize;
 
-            if written > 0 || data.len() == 0 {
+            if written > 0 || data.is_empty() {
                 return Ok(written);
             }
         }
@@ -202,7 +202,7 @@ impl<W: Write> BzDecoder<W> {
     }
 
     fn dump(&mut self) -> io::Result<()> {
-        while self.buf.len() > 0 {
+        while self.buf.is_empty() {
             let n = match self.obj.as_mut().unwrap().write(&self.buf) {
                 Ok(n) => n,
                 Err(ref err) if err.kind() == io::ErrorKind::Interrupted => continue,
@@ -223,6 +223,7 @@ impl<W: Write> BzDecoder<W> {
     ///
     /// Attempts to write data to this stream may result in a panic after this
     /// function is called.
+    #[allow(clippy::unused_io_amount)]
     pub fn try_finish(&mut self) -> io::Result<()> {
         while !self.done {
             self.write(&[])?;
@@ -275,7 +276,7 @@ impl<W: Write> Write for BzDecoder<W> {
             if res == Status::StreamEnd {
                 self.done = true;
             }
-            if written > 0 || data.len() == 0 || self.done {
+            if written > 0 || data.is_empty() || self.done {
                 return Ok(written);
             }
         }

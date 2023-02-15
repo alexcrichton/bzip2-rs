@@ -108,7 +108,7 @@ impl<R: BufRead> Read for BzEncoder<R> {
             // If we haven't ready any data and we haven't hit EOF yet, then we
             // need to keep asking for more data because if we return that 0
             // bytes of data have been read then it will be interpreted as EOF.
-            if read == 0 && !eof && buf.len() > 0 {
+            if read == 0 && !eof && buf.is_empty() {
                 continue;
             }
             if ret == Status::StreamEnd {
@@ -229,7 +229,7 @@ impl<R: BufRead> Read for BzDecoder<R> {
                 ));
             }
 
-            if read > 0 || buf.len() == 0 {
+            if read > 0 || buf.is_empty() {
                 return Ok(read);
             }
         }
