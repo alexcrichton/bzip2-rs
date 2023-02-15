@@ -3,11 +3,6 @@
 use std::io;
 use std::io::prelude::*;
 
-#[cfg(feature = "tokio")]
-use futures::Poll;
-#[cfg(feature = "tokio")]
-use tokio_io::{AsyncRead, AsyncWrite};
-
 use {Action, Compress, Compression, Decompress, Status};
 
 /// A compression stream which will have uncompressed data written to it and
@@ -151,31 +146,6 @@ impl<W: Write> Write for BzEncoder<W> {
     }
 }
 
-#[cfg(feature = "tokio")]
-impl<W: AsyncWrite> AsyncWrite for BzEncoder<W> {
-    fn shutdown(&mut self) -> Poll<(), io::Error> {
-        try_nb!(self.try_finish());
-        self.get_mut().shutdown()
-    }
-}
-
-impl<W: Read + Write> Read for BzEncoder<W> {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        self.get_mut().read(buf)
-    }
-}
-
-#[cfg(feature = "tokio")]
-impl<W: AsyncRead + AsyncWrite> AsyncRead for BzEncoder<W> {}
-
-impl<W: Write> Drop for BzEncoder<W> {
-    fn drop(&mut self) {
-        if self.obj.is_some() {
-            let _ = self.try_finish();
-        }
-    }
-}
-
 impl<W: Write> BzDecoder<W> {
     /// Create a new decoding stream which will decompress all data written
     /// to it into `obj`.
@@ -286,23 +256,6 @@ impl<W: Write> Write for BzDecoder<W> {
         self.obj.as_mut().unwrap().flush()
     }
 }
-
-#[cfg(feature = "tokio")]
-impl<W: AsyncWrite> AsyncWrite for BzDecoder<W> {
-    fn shutdown(&mut self) -> Poll<(), io::Error> {
-        try_nb!(self.try_finish());
-        self.get_mut().shutdown()
-    }
-}
-
-impl<W: Read + Write> Read for BzDecoder<W> {
-    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
-        self.get_mut().read(buf)
-    }
-}
-
-#[cfg(feature = "tokio")]
-impl<W: AsyncRead + AsyncWrite> AsyncRead for BzDecoder<W> {}
 
 impl<W: Write> Drop for BzDecoder<W> {
     fn drop(&mut self) {
