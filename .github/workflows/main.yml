@@ -39,7 +39,6 @@ jobs:
       run: rustup update ${{ matrix.rust }} --no-self-update && rustup default ${{ matrix.rust }}
       shell: bash
     - run: cargo test
-    - run: cargo test --features tokio
 
   rustfmt:
     name: Rustfmt

@@ -3,11 +3,6 @@
 use std::io::prelude::*;
 use std::io::{self, BufReader};
 
-#[cfg(feature = "tokio")]
-use futures::Poll;
-#[cfg(feature = "tokio")]
-use tokio_io::{AsyncRead, AsyncWrite};
-
 use bufread;
 use Compression;
 
@@ -76,9 +71,6 @@ impl<R: Read> Read for BzEncoder<R> {
     }
 }
 
-#[cfg(feature = "tokio")]
-impl<R: AsyncRead> AsyncRead for BzEncoder<R> {}
-
 impl<W: Write + Read> Write for BzEncoder<W> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.get_mut().write(buf)
@@ -86,13 +78,6 @@ impl<W: Write + Read> Write for BzEncoder<W> {
 
     fn flush(&mut self) -> io::Result<()> {
         self.get_mut().flush()
-    }
-}
-
-#[cfg(feature = "tokio")]
-impl<R: AsyncWrite + Read> AsyncWrite for BzEncoder<R> {
-    fn shutdown(&mut self) -> Poll<(), io::Error> {
-        self.get_mut().shutdown()
     }
 }
 
@@ -147,9 +132,6 @@ impl<R: Read> Read for BzDecoder<R> {
     }
 }
 
-#[cfg(feature = "tokio")]
-impl<R: AsyncRead + Read> AsyncRead for BzDecoder<R> {}
-
 impl<W: Write + Read> Write for BzDecoder<W> {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
         self.get_mut().write(buf)
@@ -157,13 +139,6 @@ impl<W: Write + Read> Write for BzDecoder<W> {
 
     fn flush(&mut self) -> io::Result<()> {
         self.get_mut().flush()
-    }
-}
-
-#[cfg(feature = "tokio")]
-impl<R: AsyncWrite + Read> AsyncWrite for BzDecoder<R> {
-    fn shutdown(&mut self) -> Poll<(), io::Error> {
-        self.get_mut().shutdown()
     }
 }
 
@@ -208,26 +183,6 @@ impl<R> MultiBzDecoder<R> {
 impl<R: Read> Read for MultiBzDecoder<R> {
     fn read(&mut self, into: &mut [u8]) -> io::Result<usize> {
         self.inner.read(into)
-    }
-}
-
-#[cfg(feature = "tokio")]
-impl<R: AsyncRead> AsyncRead for MultiBzDecoder<R> {}
-
-impl<R: Read + Write> Write for MultiBzDecoder<R> {
-    fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        self.get_mut().write(buf)
-    }
-
-    fn flush(&mut self) -> io::Result<()> {
-        self.get_mut().flush()
-    }
-}
-
-#[cfg(feature = "tokio")]
-impl<R: AsyncWrite + AsyncRead> AsyncWrite for MultiBzDecoder<R> {
-    fn shutdown(&mut self) -> Poll<(), io::Error> {
-        self.get_mut().shutdown()
     }
 }
 
