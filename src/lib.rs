@@ -40,15 +40,6 @@
 //! incomplete and exactly 900K bytes, you probably need a
 //! `MultiBzDecoder`.
 //!
-//! # Async I/O
-//!
-//! This crate optionally can support async I/O streams with the Tokio stack via
-//! the `tokio` feature of this crate:
-//!
-//! ```toml
-//! bzip2 = { version = "0.4", features = ["tokio"] }
-//! ```
-//!
 //! All methods are internally capable of working with streams that may return
 //! `ErrorKind::WouldBlock` when they're not ready to perform the particular
 //! operation.
@@ -71,11 +62,6 @@ extern crate partial_io;
 extern crate quickcheck;
 #[cfg(test)]
 extern crate rand;
-#[cfg(feature = "tokio")]
-#[macro_use]
-extern crate tokio_io;
-#[cfg(feature = "tokio")]
-extern crate futures;
 
 pub use mem::{Action, Compress, Decompress, Error, Status};
 
