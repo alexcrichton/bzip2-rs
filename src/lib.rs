@@ -6,9 +6,6 @@
 //! decompressors are available in each module depending on what operation you
 //! need.
 //!
-//! Access to the raw decompression/compression stream is also provided through
-//! the `raw` module which has a much closer interface to libbz2.
-//!
 //! # Example
 //!
 //! ```
