@@ -41,7 +41,7 @@ impl<W: Write> BzEncoder<W> {
     }
 
     fn dump(&mut self) -> io::Result<()> {
-        while self.buf.is_empty() {
+        while !self.buf.is_empty() {
             let n = match self.obj.as_mut().unwrap().write(&self.buf) {
                 Ok(n) => n,
                 Err(ref err) if err.kind() == io::ErrorKind::Interrupted => continue,
@@ -202,7 +202,7 @@ impl<W: Write> BzDecoder<W> {
     }
 
     fn dump(&mut self) -> io::Result<()> {
-        while self.buf.is_empty() {
+        while !self.buf.is_empty() {
             let n = match self.obj.as_mut().unwrap().write(&self.buf) {
                 Ok(n) => n,
                 Err(ref err) if err.kind() == io::ErrorKind::Interrupted => continue,
