@@ -40,7 +40,7 @@ fn main() {
 
     let src = env::current_dir().unwrap().join("bzip2-1.0.8");
     let include = dst.join("include");
-    fs::create_dir_all(&include).unwrap();
+    fs::create_dir_all(include).unwrap();
     fs::copy(src.join("bzlib.h"), dst.join("include/bzlib.h")).unwrap();
     println!("cargo:root={}", dst.display());
     println!("cargo:include={}", dst.join("include").display());
