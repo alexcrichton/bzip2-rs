@@ -27,7 +27,7 @@ pub struct Decompress {
 
 struct Stream<D: Direction> {
     // libbz2 requires a stable address for this stream.
-    raw: Box<ffi::bz_stream>,
+    raw: *mut ffi::bz_stream,
     _marker: marker::PhantomData<D>,
 }
 
@@ -119,9 +119,10 @@ impl Compress {
     /// equivalent to using the default value of 30.
     pub fn new(lvl: Compression, work_factor: u32) -> Compress {
         unsafe {
-            let mut raw = Box::new(mem::zeroed());
+            let boxed = Box::new(mem::zeroed());
+            let raw: *mut ffi::bz_stream = Box::into_raw(boxed);
             assert_eq!(
-                ffi::BZ2_bzCompressInit(&mut *raw, lvl.level() as c_int, 0, work_factor as c_int),
+                ffi::BZ2_bzCompressInit(raw, lvl.level() as c_int, 0, work_factor as c_int),
                 0
             );
             Compress {
@@ -149,12 +150,13 @@ impl Compress {
         if input.len() == 0 && action == Action::Run {
             return Ok(Status::RunOk);
         }
-        self.inner.raw.next_in = input.as_ptr() as *mut _;
-        self.inner.raw.avail_in = input.len().min(c_uint::MAX as usize) as c_uint;
-        self.inner.raw.next_out = output.as_mut_ptr() as *mut _;
-        self.inner.raw.avail_out = output.len().min(c_uint::MAX as usize) as c_uint;
         unsafe {
-            match ffi::BZ2_bzCompress(&mut *self.inner.raw, action as c_int) {
+            (*self.inner.raw).next_in = input.as_ptr() as *mut _;
+            (*self.inner.raw).avail_in = input.len().min(c_uint::MAX as usize) as c_uint;
+            (*self.inner.raw).next_out = output.as_mut_ptr() as *mut _;
+            (*self.inner.raw).avail_out = output.len().min(c_uint::MAX as usize) as c_uint;
+
+            match ffi::BZ2_bzCompress(self.inner.raw, action as c_int) {
                 ffi::BZ_RUN_OK => Ok(Status::RunOk),
                 ffi::BZ_FLUSH_OK => Ok(Status::FlushOk),
                 ffi::BZ_FINISH_OK => Ok(Status::FinishOk),
@@ -211,8 +213,9 @@ impl Decompress {
     /// maximum memory requirement drops to around 2300k). See
     pub fn new(small: bool) -> Decompress {
         unsafe {
-            let mut raw = Box::new(mem::zeroed());
-            assert_eq!(ffi::BZ2_bzDecompressInit(&mut *raw, 0, small as c_int), 0);
+            let boxed = Box::new(mem::zeroed());
+            let raw: *mut ffi::bz_stream = Box::into_raw(boxed);
+            assert_eq!(ffi::BZ2_bzDecompressInit(raw, 0, small as c_int), 0);
             Decompress {
                 inner: Stream {
                     raw: raw,
@@ -224,11 +227,11 @@ impl Decompress {
 
     /// Decompress a block of input into a block of output.
     pub fn decompress(&mut self, input: &[u8], output: &mut [u8]) -> Result<Status, Error> {
-        self.inner.raw.next_in = input.as_ptr() as *mut _;
-        self.inner.raw.avail_in = input.len().min(c_uint::MAX as usize) as c_uint;
-        self.inner.raw.next_out = output.as_mut_ptr() as *mut _;
-        self.inner.raw.avail_out = output.len().min(c_uint::MAX as usize) as c_uint;
         unsafe {
+            (*self.inner.raw).next_in = input.as_ptr() as *mut _;
+            (*self.inner.raw).avail_in = input.len().min(c_uint::MAX as usize) as c_uint;
+            (*self.inner.raw).next_out = output.as_mut_ptr() as *mut _;
+            (*self.inner.raw).avail_out = output.len().min(c_uint::MAX as usize) as c_uint;
             match ffi::BZ2_bzDecompress(&mut *self.inner.raw) {
                 ffi::BZ_OK => Ok(Status::Ok),
                 ffi::BZ_MEM_ERROR => Ok(Status::MemNeeded),
@@ -276,11 +279,11 @@ impl Decompress {
 
 impl<D: Direction> Stream<D> {
     fn total_in(&self) -> u64 {
-        (self.raw.total_in_lo32 as u64) | ((self.raw.total_in_hi32 as u64) << 32)
+        unsafe { ((*self.raw).total_in_lo32 as u64) | (((*self.raw).total_in_hi32 as u64) << 32) }
     }
 
     fn total_out(&self) -> u64 {
-        (self.raw.total_out_lo32 as u64) | ((self.raw.total_out_hi32 as u64) << 32)
+        unsafe { ((*self.raw).total_out_lo32 as u64) | (((*self.raw).total_out_hi32 as u64) << 32) }
     }
 }
 
@@ -318,7 +321,8 @@ impl Direction for DirDecompress {
 impl<D: Direction> Drop for Stream<D> {
     fn drop(&mut self) {
         unsafe {
-            let _ = D::destroy(&mut *self.raw);
+            let _ = D::destroy(self.raw);
+            drop(Box::from_raw(self.raw));
         }
     }
 }
