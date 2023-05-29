@@ -203,7 +203,8 @@ impl<W: Write> BzDecoder<W> {
     ///
     /// [`write`]: Self::write
     pub fn try_finish(&mut self) -> io::Result<()> {
-        while !self.done {
+        // If nothing was written, there is no need to loop
+        while !self.done && self.total_in() > 0 {
             let _ = self.write(&[])?;
         }
         self.dump()
