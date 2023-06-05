@@ -224,7 +224,8 @@ impl<W: Write> BzDecoder<W> {
     /// Attempts to write data to this stream may result in a panic after this
     /// function is called.
     pub fn try_finish(&mut self) -> io::Result<()> {
-        while !self.done {
+        // If nothing was written, there is no need to loop
+        while !self.done && self.total_in() > 0 {
             self.write(&[])?;
         }
         self.dump()
