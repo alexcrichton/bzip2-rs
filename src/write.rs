@@ -270,11 +270,17 @@ impl<W: Write> Write for BzDecoder<W> {
             let res = self.data.decompress_vec(data, &mut self.buf);
             let written = (self.total_in() - before) as usize;
 
-            let res = res.map_err(|e| io::Error::new(io::ErrorKind::InvalidInput, e))?;
-
-            if res == Status::StreamEnd {
-                self.done = true;
+            match res {
+                Err(e) => {
+                    self.done = true;
+                    return Err(io::Error::new(io::ErrorKind::InvalidInput, e));
+                }
+                Ok(Status::StreamEnd) => {
+                    self.done = true;
+                }
+                Ok(_) => {}
             }
+
             if written > 0 || data.len() == 0 || self.done {
                 return Ok(written);
             }
@@ -339,6 +345,14 @@ mod tests {
         c.write(b"").unwrap();
         let data = c.finish().unwrap().finish().unwrap();
         assert_eq!(&data[..], b"");
+    }
+
+    // https://github.com/alexcrichton/bzip2-rs/issues/98
+    #[test]
+    fn write_invalid() {
+        let mut d = BzDecoder::new(Vec::new());
+        let e = d.write(b"BZh\xfb").unwrap_err();
+        assert_eq!(e.kind(), std::io::ErrorKind::InvalidInput);
     }
 
     #[test]
