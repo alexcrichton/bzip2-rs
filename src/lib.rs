@@ -64,7 +64,6 @@
 #![doc(html_root_url = "https://docs.rs/bzip2/")]
 
 extern crate bzip2_sys as ffi;
-extern crate libc;
 #[cfg(test)]
 extern crate partial_io;
 #[cfg(test)]
