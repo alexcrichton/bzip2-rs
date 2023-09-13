@@ -2,14 +2,14 @@
 
 extern crate libc;
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(
+    target_arch = "wasm32",
+    target_vendor = "unknown",
+    target_os = "unknown"
+))]
 mod wasm_shim;
 
-#[cfg(feature = "std")]
 use std::os::raw::{c_char, c_int, c_uint, c_void};
-
-#[cfg(not(feature = "std"))]
-use libc::{c_char, c_int, c_uint, c_void};
 
 pub const BZ_RUN: c_int = 0;
 pub const BZ_FLUSH: c_int = 1;

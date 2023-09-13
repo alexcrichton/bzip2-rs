@@ -27,16 +27,14 @@ fn main() {
     // Note that Emscripten already provides its own C standard library so
     // wasm32-unknown-emscripten should not be included here.
     // See: https://github.com/gyscos/zstd-rs/pull/209
-    let need_wasm_shim = env::var("TARGET").map_or(false, |target| {
-        target == "wasm32-unknown-unknown" || target == "wasm32-wasi"
-    });
+    let need_wasm_shim =
+        env::var("TARGET").map_or(false, |target| target == "wasm32-unknown-unknown");
 
     if need_wasm_shim {
-        cargo_print(&"rerun-if-changed=wasm-shim/stdlib.h");
-        cargo_print(&"rerun-if-changed=wasm-shim/string.h");
+        cargo_print(&"rerun-if-changed=wasm_shim/stdlib.h");
+        cargo_print(&"rerun-if-changed=wasm_shim/string.h");
 
-        cfg.include("wasm-shim/");
-        cfg.define("XXH_STATIC_ASSERT", Some("0"));
+        cfg.include("wasm_shim/");
         cfg.opt_level(3);
     }
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();

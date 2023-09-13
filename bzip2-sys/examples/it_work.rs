@@ -1,8 +1,4 @@
-#[cfg(feature = "std")]
 use std::os::raw::{c_char, c_int, c_uint};
-
-#[cfg(not(feature = "std"))]
-use libc::{c_char, c_int, c_uint};
 
 #[no_mangle]
 pub extern "C" fn test_decompress() -> bool {
