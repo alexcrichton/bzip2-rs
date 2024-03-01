@@ -26,7 +26,7 @@ pub extern "C" fn rust_bzip2_wasm_shim_malloc(size: usize) -> *mut u8 {
             // Store the original size in the header
             (*ptr).size = size;
             // Return a pointer to the memory after the header
-            ptr.add(1) as *mut u8 
+            ptr.add(1) as *mut u8
         } else {
             ptr::null_mut()
         }
