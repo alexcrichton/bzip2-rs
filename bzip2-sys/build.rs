@@ -12,7 +12,9 @@ fn main() {
     if target.contains("windows") {
         cfg.define("_WIN32", None);
         cfg.define("BZ_EXPORT", None);
-    } else if !cfg!(feature = "static") {
+    }
+
+    if !cfg!(feature = "static") && !target.contains("msvc") {
         // pkg-config doesn't guarantee static link
         if pkg_config::Config::new()
             .cargo_metadata(true)
