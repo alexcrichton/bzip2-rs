@@ -204,7 +204,15 @@ impl<W: Write> BzDecoder<W> {
     /// [`write`]: Self::write
     pub fn try_finish(&mut self) -> io::Result<()> {
         while !self.done {
-            let _ = self.write(&[])?;
+            let before = self.total_in();
+            let written = self.write(&[])?;
+
+            if self.total_in() == before && written == 0 {
+                return Err(io::Error::new(
+                    io::ErrorKind::UnexpectedEof,
+                    "Input EOF reached before logical stream ends",
+                ));
+            }
         }
         self.dump()
     }
