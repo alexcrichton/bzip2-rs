@@ -233,7 +233,8 @@ impl<R: AsyncWrite + AsyncRead> AsyncWrite for MultiBzDecoder<R> {
 
 #[cfg(test)]
 mod tests {
-    use partial_io::{GenInterrupted, PartialRead, PartialWithErrors};
+    use partial_io::quickcheck_types::{GenInterrupted, PartialWithErrors};
+    use partial_io::PartialRead;
     use rand::distributions::Standard;
     use rand::{thread_rng, Rng};
     use read::{BzDecoder, BzEncoder, MultiBzDecoder};
@@ -366,7 +367,7 @@ mod tests {
 
     #[test]
     fn qc_partial() {
-        quickcheck6::quickcheck(test as fn(_, _, _) -> _);
+        ::quickcheck::quickcheck(test as fn(_, _, _) -> _);
 
         fn test(
             v: Vec<u8>,
