@@ -28,3 +28,8 @@ cc = "1.0"
 [features]
 # Enable this feature if you want to have a statically linked bzip2
 static = []
+
+fat-lto = [] # Enable fat-lto, will override thin-lto if specified
+thin-lto = [] # Enable thin-lto, will fallback to fat-lto if not supported
+
+thin = [] # Use -Oz is possible, otherwise fallback to -Os or -O2. For msvc it will be /O1
