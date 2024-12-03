@@ -315,7 +315,8 @@ impl<W: Write> Drop for BzDecoder<W> {
 #[cfg(test)]
 mod tests {
     use super::{BzDecoder, BzEncoder};
-    use partial_io::{GenInterrupted, PartialWithErrors, PartialWrite};
+    use partial_io::quickcheck_types::{GenInterrupted, PartialWithErrors};
+    use partial_io::PartialWrite;
     use std::io::prelude::*;
     use std::iter::repeat;
 
@@ -355,7 +356,7 @@ mod tests {
 
     #[test]
     fn qc_partial() {
-        quickcheck6::quickcheck(test as fn(_, _, _) -> _);
+        quickcheck::quickcheck(test as fn(_, _, _) -> _);
 
         fn test(
             v: Vec<u8>,
