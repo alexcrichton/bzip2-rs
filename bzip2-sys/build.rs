@@ -2,7 +2,7 @@ extern crate cc;
 extern crate pkg_config;
 
 use std::path::PathBuf;
-use std::{env, fs};
+use std::{env, fmt, fs};
 
 fn main() {
     let mut cfg = cc::Build::new();
@@ -21,6 +21,27 @@ fn main() {
         {
             return;
         }
+    }
+
+    // List out the WASM targets that need wasm-shim.
+    // Note that Emscripten already provides its own C standard library so
+    // wasm32-unknown-emscripten should not be included here.
+    // See: https://github.com/gyscos/zstd-rs/pull/209
+    let need_wasm_shim =
+        env::var("TARGET").map_or(false, |target| target == "wasm32-unknown-unknown");
+
+    if need_wasm_shim {
+        cargo_print(&"rerun-if-changed=wasm_shim/stdlib.h");
+        cargo_print(&"rerun-if-changed=wasm_shim/string.h");
+
+        cfg.include("wasm_shim/");
+        cfg.opt_level(3);
+    }
+    let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap_or_default();
+    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_default();
+
+    if target_arch == "wasm32" || target_os == "hermit" {
+        cargo_print(&"rustc-cfg=feature=\"std\"");
     }
 
     let dst = PathBuf::from(env::var_os("OUT_DIR").unwrap());
@@ -42,6 +63,18 @@ fn main() {
     let include = dst.join("include");
     fs::create_dir_all(&include).unwrap();
     fs::copy(src.join("bzlib.h"), dst.join("include/bzlib.h")).unwrap();
-    println!("cargo:root={}", dst.display());
-    println!("cargo:include={}", dst.join("include").display());
+    cargo_print(&format_args!("cargo:root={}", dst.display()));
+    cargo_print(&format_args!(
+        "cargo:include={}",
+        dst.join("include").display()
+    ));
+}
+
+/// Print a line for cargo.
+///
+/// If non-cargo is set, do not print anything.
+fn cargo_print(content: &dyn fmt::Display) {
+    if cfg!(not(feature = "non-cargo")) {
+        println!("cargo:{}", content);
+    }
 }
