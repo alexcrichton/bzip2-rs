@@ -28,3 +28,5 @@ cc = "1.0"
 [features]
 # Enable this feature if you want to have a statically linked bzip2
 static = []
+std = [] # Use std types instead of libc in bindgen
+
