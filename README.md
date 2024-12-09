@@ -10,6 +10,21 @@ A streaming compression/decompression library for rust with bindings to libbz2.
 bzip2 = "0.4"
 ```
 
+## WASM
+bzip2-rs can be compiled to WASM. Make sure you added `wasm32-unknown-unknown` target
+```bash
+rustup target add wasm32-unknown-unknown
+```
+To build and run WASM example make sure that you working directory in terminal is `bzip2-sys`
+### Build WASM target
+```bash
+cargo build --target wasm32-unknown-unknown --no-default-features --example it_work
+```
+
+### Run WASM target using wasmtime
+```bash
+wasmtime ..\target\wasm32-unknown-unknown\debug\examples\it_work.wasm --invoke test_decompress
+```
 
 # License
 
