@@ -7,7 +7,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        build: [stable, beta, nightly, macos, win32, win64, win32-gnu, win64-gnu]
+        build: [stable, beta, nightly, msrv, macos, win32, win64, win32-gnu, win64-gnu]
         include:
           - build: stable
             os: ubuntu-latest
@@ -16,6 +16,9 @@ jobs:
             os: ubuntu-latest
             rust: beta
           - build: nightly
+            os: ubuntu-latest
+            rust: nightly
+          - build: msrv
             os: ubuntu-latest
             rust: nightly
           - build: macos
@@ -38,6 +41,15 @@ jobs:
     - name: Install Rust (rustup)
       run: rustup update ${{ matrix.rust }} --no-self-update && rustup default ${{ matrix.rust }}
       shell: bash
+      if: matrix.build != 'msrv'
+    - name: Install Rust (rustup)
+      run: |
+        # extract the MSRV from the Cargo.toml's `rust-version`
+        MSRV=$(awk -F'"' '/rust-version/ {print $2}' Cargo.toml)
+        TOOLCHAIN="${MSRV}-x86_64-unknown-linux-gnu"
+        rustup update $TOOLCHAIN --no-self-update && rustup default $TOOLCHAIN
+      shell: bash
+      if: matrix.build == 'msrv'
     - run: cargo test
 
   rustfmt:
