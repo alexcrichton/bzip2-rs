@@ -8,7 +8,7 @@ use std::slice;
 
 use libc::{c_int, c_uint};
 
-use {ffi, Compression};
+use crate::{ffi, Compression};
 
 /// Representation of an in-memory compression stream.
 ///
