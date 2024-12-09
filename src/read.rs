@@ -225,7 +225,7 @@ mod tests {
         let mut d = BzDecoder::new(c);
         let mut data = vec![];
         d.read_to_end(&mut data).unwrap();
-        assert!(data == &m[..]);
+        assert!(data == m[..]);
     }
 
     #[test]
@@ -239,18 +239,15 @@ mod tests {
         let v = thread_rng()
             .sample_iter(&Standard)
             .take(1024)
-            .collect::<Vec<_>>();
+            .collect::<Vec<u8>>();
         for _ in 0..200 {
-            result.extend(v.iter().map(|x: &u8| *x));
+            result.extend(v.iter().copied());
         }
 
         let mut d = BzDecoder::new(&result[..]);
-        let mut data = Vec::with_capacity(m.len());
-        unsafe {
-            data.set_len(m.len());
-        }
+        let mut data = vec![0; m.len()];
         assert!(d.read(&mut data).unwrap() == m.len());
-        assert!(data == &m[..]);
+        assert!(data == m[..]);
     }
 
     #[test]
@@ -304,7 +301,7 @@ mod tests {
         let mut r = BzDecoder::new(r);
         let mut v2 = Vec::new();
         r.read_to_end(&mut v2).unwrap();
-        assert!(v2.len() == 0);
+        assert!(v2.is_empty());
     }
 
     #[test]

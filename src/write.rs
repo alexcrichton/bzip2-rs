@@ -36,7 +36,7 @@ impl<W: Write> BzEncoder<W> {
     }
 
     fn dump(&mut self) -> io::Result<()> {
-        while self.buf.len() > 0 {
+        while !self.buf.is_empty() {
             let n = match self.obj.as_mut().unwrap().write(&self.buf) {
                 Ok(n) => n,
                 Err(ref err) if err.kind() == io::ErrorKind::Interrupted => continue,
@@ -124,7 +124,7 @@ impl<W: Write> Write for BzEncoder<W> {
                 .unwrap();
             let written = (self.total_in() - total_in) as usize;
 
-            if written > 0 || data.len() == 0 {
+            if written > 0 || data.is_empty() {
                 return Ok(written);
             }
         }
@@ -172,7 +172,7 @@ impl<W: Write> BzDecoder<W> {
     }
 
     fn dump(&mut self) -> io::Result<()> {
-        while self.buf.len() > 0 {
+        while !self.buf.is_empty() {
             let n = match self.obj.as_mut().unwrap().write(&self.buf) {
                 Ok(n) => n,
                 Err(ref err) if err.kind() == io::ErrorKind::Interrupted => continue,
@@ -195,7 +195,7 @@ impl<W: Write> BzDecoder<W> {
     /// function is called.
     pub fn try_finish(&mut self) -> io::Result<()> {
         while !self.done {
-            self.write(&[])?;
+            let _ = self.write(&[])?;
         }
         self.dump()
     }
@@ -245,7 +245,7 @@ impl<W: Write> Write for BzDecoder<W> {
             if res == Status::StreamEnd {
                 self.done = true;
             }
-            if written > 0 || data.len() == 0 || self.done {
+            if written > 0 || data.is_empty() || self.done {
                 return Ok(written);
             }
         }
@@ -272,14 +272,13 @@ mod tests {
     use partial_io::quickcheck_types::{GenInterrupted, PartialWithErrors};
     use partial_io::PartialWrite;
     use std::io::prelude::*;
-    use std::iter::repeat;
 
     #[test]
     fn smoke() {
         let d = BzDecoder::new(Vec::new());
         let mut c = BzEncoder::new(d, Compression::default());
         c.write_all(b"12834").unwrap();
-        let s = repeat("12345").take(100000).collect::<String>();
+        let s = "12345".repeat(100000);
         c.write_all(s.as_bytes()).unwrap();
         let data = c.finish().unwrap().finish().unwrap();
         assert_eq!(&data[0..5], b"12834");
@@ -291,7 +290,7 @@ mod tests {
     fn write_empty() {
         let d = BzDecoder::new(Vec::new());
         let mut c = BzEncoder::new(d, Compression::default());
-        c.write(b"").unwrap();
+        let _ = c.write(b"").unwrap();
         let data = c.finish().unwrap().finish().unwrap();
         assert_eq!(&data[..], b"");
     }
