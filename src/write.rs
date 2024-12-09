@@ -64,12 +64,14 @@ impl<W: Write> BzEncoder<W> {
     ///
     /// Note that this function can only be used once data has finished being
     /// written to the output stream. After this function is called then further
-    /// calls to `write` may result in a panic.
+    /// calls to [`write`] may result in a panic.
     ///
     /// # Panics
     ///
     /// Attempts to write data to this stream may result in a panic after this
     /// function is called.
+    ///
+    /// [`write`]: Self::write
     pub fn try_finish(&mut self) -> io::Result<()> {
         while !self.done {
             self.dump()?;
@@ -89,9 +91,11 @@ impl<W: Write> BzEncoder<W> {
     ///
     /// Note that this function may not be suitable to call in a situation where
     /// the underlying stream is an asynchronous I/O stream. To finish a stream
-    /// the `try_finish` (or `shutdown`) method should be used instead. To
+    /// the [`try_finish`] (or `shutdown`) method should be used instead. To
     /// re-acquire ownership of a stream it is safe to call this method after
-    /// `try_finish` or `shutdown` has returned `Ok`.
+    /// [`try_finish`] or `shutdown` has returned `Ok`.
+    ///
+    /// [`try_finish`]: Self::try_finish
     pub fn finish(mut self) -> io::Result<W> {
         self.try_finish()?;
         Ok(self.obj.take().unwrap())
@@ -100,8 +104,11 @@ impl<W: Write> BzEncoder<W> {
     /// Returns the number of bytes produced by the compressor
     ///
     /// Note that, due to buffering, this only bears any relation to
-    /// `total_in()` after a call to `flush()`.  At that point,
+    /// [`total_in`] after a call to [`flush`].  At that point,
     /// `total_out() / total_in()` is the compression ratio.
+    ///
+    /// [`flush`]: Self::flush
+    /// [`total_in`]: Self::total_in
     pub fn total_out(&self) -> u64 {
         self.data.total_out()
     }
@@ -187,12 +194,14 @@ impl<W: Write> BzDecoder<W> {
     ///
     /// Note that this function can only be used once data has finished being
     /// written to the output stream. After this function is called then further
-    /// calls to `write` may result in a panic.
+    /// calls to [`write`] may result in a panic.
     ///
     /// # Panics
     ///
     /// Attempts to write data to this stream may result in a panic after this
     /// function is called.
+    ///
+    /// [`write`]: Self::write
     pub fn try_finish(&mut self) -> io::Result<()> {
         while !self.done {
             let _ = self.write(&[])?;
@@ -204,9 +213,11 @@ impl<W: Write> BzDecoder<W> {
     ///
     /// Note that this function may not be suitable to call in a situation where
     /// the underlying stream is an asynchronous I/O stream. To finish a stream
-    /// the `try_finish` (or `shutdown`) method should be used instead. To
+    /// the [`try_finish`] (or `shutdown`) method should be used instead. To
     /// re-acquire ownership of a stream it is safe to call this method after
-    /// `try_finish` or `shutdown` has returned `Ok`.
+    /// [`try_finish`] or `shutdown` has returned `Ok`.
+    ///
+    /// [`try_finish`]: Self::try_finish
     pub fn finish(&mut self) -> io::Result<W> {
         self.try_finish()?;
         Ok(self.obj.take().unwrap())
@@ -215,8 +226,11 @@ impl<W: Write> BzDecoder<W> {
     /// Returns the number of bytes produced by the decompressor
     ///
     /// Note that, due to buffering, this only bears any relation to
-    /// `total_in()` after a call to `flush()`.  At that point,
+    /// [`total_in`] after a call to [`flush`].  At that point,
     /// `total_in() / total_out()` is the compression ratio.
+    ///
+    /// [`flush`]: Self::flush
+    /// [`total_in`]: Self::total_in
     pub fn total_out(&self) -> u64 {
         self.data.total_out()
     }
