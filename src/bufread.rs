@@ -7,7 +7,7 @@ use crate::{Action, Compress, Compression, Decompress, Status};
 
 /// A bz2 encoder, or compressor.
 ///
-/// This structure implements a `BufRead` interface and will read uncompressed
+/// This structure implements a [`BufRead`] interface and will read uncompressed
 /// data from an underlying stream and emit a stream of compressed data.
 pub struct BzEncoder<R> {
     obj: R,
@@ -17,7 +17,7 @@ pub struct BzEncoder<R> {
 
 /// A bz2 decoder, or decompressor.
 ///
-/// This structure implements a `BufRead` interface and takes a stream of
+/// This structure implements a [`BufRead`] interface and takes a stream of
 /// compressed data as input, providing the decompressed data when read from.
 pub struct BzDecoder<R> {
     obj: R,
@@ -234,7 +234,7 @@ impl<W: Write> Write for BzDecoder<W> {
 /// A bzip2 streaming decoder that decodes all members of a multistream.
 ///
 /// Wikipedia, particularly, uses bzip2 multistream for their dumps, and the
-/// `pbzip2` tool creates such data as well;
+/// `pbzip2` tool creates such data as well.
 pub struct MultiBzDecoder<R>(BzDecoder<R>);
 
 impl<R: BufRead> MultiBzDecoder<R> {

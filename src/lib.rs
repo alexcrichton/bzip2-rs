@@ -1,18 +1,20 @@
 //! Bzip compression for Rust
 //!
-//! This library contains bindings to libbz2 to support bzip compression and
+//! This library contains bindings to [`libbz2`] to support bzip compression and
 //! decompression for Rust. The streams offered in this library are primarily
-//! found in the `reader` and `writer` modules. Both compressors and
+//! found in the [`mod@read`] and [`mod@write`] modules. Both compressors and
 //! decompressors are available in each module depending on what operation you
 //! need.
 //!
-//! Access to the raw decompression/compression stream is also provided through
-//! the `raw` module which has a much closer interface to libbz2.
+//! A more low-level interface, much closer to the interface of [`libbz2`], is
+//! available via the [`Compress`] and [`Decompress`] structs.
+//!
+//! [`libbz2`]: https://sourceware.org/bzip2/manual/manual.html
 //!
 //! # Example
 //!
 //! ```
-//! use std::io::prelude::*;
+//! use std::io::{BufRead, Read, Write};
 //! use bzip2::Compression;
 //! use bzip2::read::{BzEncoder, BzDecoder};
 //!
@@ -41,8 +43,8 @@
 //! `MultiBzDecoder`.
 //!
 //! All methods are internally capable of working with streams that may return
-//! `ErrorKind::WouldBlock` when they're not ready to perform the particular
-//! operation.
+//! [`ErrorKind::WouldBlock`](std::io::ErrorKind::WouldBlock) when they're not
+//! ready to perform the particular operation.
 //!
 //! Note that care needs to be taken when using these objects, however. The
 //! Tokio runtime, in particular, requires that data is fully flushed before

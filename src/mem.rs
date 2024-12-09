@@ -12,14 +12,14 @@ use crate::{ffi, Compression};
 
 /// Representation of an in-memory compression stream.
 ///
-/// An instance of `Compress` can be used to compress a stream of bz2 data.
+/// An instance of [`Compress`] can be used to compress a stream of bz2 data.
 pub struct Compress {
     inner: Stream<DirCompress>,
 }
 
 /// Representation of an in-memory decompression stream.
 ///
-/// An instance of `Decompress` can be used to inflate a stream of bz2-encoded
+/// An instance of [`Decompress`] can be used to decompress a stream of bz2-encoded
 /// data.
 pub struct Decompress {
     inner: Stream<DirDecompress>,
@@ -46,7 +46,7 @@ enum DirDecompress {}
 pub enum Action {
     /// Normal compression.
     Run = ffi::BZ_RUN as isize,
-    /// Request that the current compression block is terminate.
+    /// Flush any existing output, but do not read any more input
     Flush = ffi::BZ_FLUSH as isize,
     /// Request that the compression stream be finalized.
     Finish = ffi::BZ_FINISH as isize,
@@ -61,7 +61,7 @@ pub enum Status {
     /// The Flush action on a compression went ok.
     FlushOk,
 
-    /// THe Run action on compression went ok.
+    /// The Run action on compression went ok.
     RunOk,
 
     /// The Finish action on compression went ok.
@@ -135,8 +135,11 @@ impl Compress {
 
     /// Compress a block of input into a block of output.
     ///
-    /// If anything other than BZ_OK is seen, `Err` is returned. The action
-    /// given must be one of Run, Flush or Finish.
+    /// If anything other than [`BZ_OK`] is seen, `Err` is returned.
+    ///
+    /// The action given must be one of [`Action::Run`], [`Action::Flush`] or [`Action::Finish`].
+    ///
+    /// [`BZ_OK`]: ffi::BZ_OK
     pub fn compress(
         &mut self,
         input: &[u8],
@@ -209,7 +212,7 @@ impl Decompress {
     /// If `small` is true, then the library will use an alternative
     /// decompression algorithm which uses less memory but at the cost of
     /// decompressing more slowly (roughly speaking, half the speed, but the
-    /// maximum memory requirement drops to around 2300k). See
+    /// maximum memory requirement drops to around 2300k).
     pub fn new(small: bool) -> Decompress {
         unsafe {
             let mut raw = Box::new(mem::zeroed());
