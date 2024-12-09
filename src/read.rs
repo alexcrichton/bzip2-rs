@@ -3,8 +3,8 @@
 use std::io::prelude::*;
 use std::io::{self, BufReader};
 
-use bufread;
-use Compression;
+use crate::bufread;
+use crate::Compression;
 
 /// A compression stream which wraps an uncompressed stream of data. Compressed
 /// data will be read from the stream.
@@ -188,13 +188,13 @@ impl<R: Read> Read for MultiBzDecoder<R> {
 
 #[cfg(test)]
 mod tests {
+    use crate::read::{BzDecoder, BzEncoder, MultiBzDecoder};
+    use crate::Compression;
     use partial_io::quickcheck_types::{GenInterrupted, PartialWithErrors};
     use partial_io::PartialRead;
     use rand::distributions::Standard;
     use rand::{thread_rng, Rng};
-    use read::{BzDecoder, BzEncoder, MultiBzDecoder};
-    use std::io::prelude::*;
-    use Compression;
+    use std::io::Read;
 
     #[test]
     fn smoke() {

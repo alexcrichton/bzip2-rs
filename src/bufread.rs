@@ -3,7 +3,7 @@
 use std::io;
 use std::io::prelude::*;
 
-use {Action, Compress, Compression, Decompress, Status};
+use crate::{Action, Compress, Compression, Decompress, Status};
 
 /// A bz2 encoder, or compressor.
 ///

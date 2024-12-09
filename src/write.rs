@@ -3,7 +3,7 @@
 use std::io;
 use std::io::prelude::*;
 
-use {Action, Compress, Compression, Decompress, Status};
+use crate::{Action, Compress, Compression, Decompress, Status};
 
 /// A compression stream which will have uncompressed data written to it and
 /// will write compressed data to an output stream.
@@ -268,6 +268,7 @@ impl<W: Write> Drop for BzDecoder<W> {
 #[cfg(test)]
 mod tests {
     use super::{BzDecoder, BzEncoder};
+    use crate::Compression;
     use partial_io::quickcheck_types::{GenInterrupted, PartialWithErrors};
     use partial_io::PartialWrite;
     use std::io::prelude::*;
@@ -276,7 +277,7 @@ mod tests {
     #[test]
     fn smoke() {
         let d = BzDecoder::new(Vec::new());
-        let mut c = BzEncoder::new(d, ::Compression::default());
+        let mut c = BzEncoder::new(d, Compression::default());
         c.write_all(b"12834").unwrap();
         let s = repeat("12345").take(100000).collect::<String>();
         c.write_all(s.as_bytes()).unwrap();
@@ -289,7 +290,7 @@ mod tests {
     #[test]
     fn write_empty() {
         let d = BzDecoder::new(Vec::new());
-        let mut c = BzEncoder::new(d, ::Compression::default());
+        let mut c = BzEncoder::new(d, Compression::default());
         c.write(b"").unwrap();
         let data = c.finish().unwrap().finish().unwrap();
         assert_eq!(&data[..], b"");
@@ -301,7 +302,7 @@ mod tests {
 
         fn test(v: Vec<u8>) -> bool {
             let w = BzDecoder::new(Vec::new());
-            let mut w = BzEncoder::new(w, ::Compression::default());
+            let mut w = BzEncoder::new(w, Compression::default());
             w.write_all(&v).unwrap();
             v == w.finish().unwrap().finish().unwrap()
         }
@@ -317,7 +318,7 @@ mod tests {
             decode_ops: PartialWithErrors<GenInterrupted>,
         ) -> bool {
             let w = BzDecoder::new(PartialWrite::new(Vec::new(), decode_ops));
-            let mut w = BzEncoder::new(PartialWrite::new(w, encode_ops), ::Compression::default());
+            let mut w = BzEncoder::new(PartialWrite::new(w, encode_ops), Compression::default());
             w.write_all(&v).unwrap();
             v == w
                 .finish()
