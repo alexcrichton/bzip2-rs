@@ -2,16 +2,19 @@
 
 [Documentation](https://docs.rs/bzip2)
 
-A streaming compression/decompression library for rust with bindings to libbz2.
+A streaming compression/decompression library for rust with bindings to `libbz2`.
 
-```toml
-# Cargo.toml
-[dependencies]
-bzip2 = "0.4"
-```
+## Features
 
+By default, `bzip2-rs` attempts to use the system `libbz2`. When `libbz2` is not available, the library 
+is built from source. A from source build requires a functional C toolchain for your target, and may not 
+work for all targets (in particular webassembly).
 
-# License
+*`static`*
+
+Always build `libbz2` from source, and statically link it. 
+
+## License
 
 This project is licensed under either of
 
