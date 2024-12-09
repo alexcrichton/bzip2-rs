@@ -13,6 +13,7 @@ Bindings to libbzip2 for bzip2 compression and decompression exposed as
 Reader/Writer streams.
 """
 categories = ["compression", "api-bindings"]
+rust-version = "1.65.0" # MSRV
 
 [workspace]
 
