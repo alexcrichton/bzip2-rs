@@ -1,13 +1,12 @@
 [package]
 edition = "2021"
 name = "bzip2"
-version = "0.4.4"
-authors = ["Alex Crichton <alex@alexcrichton.com>"]
-license = "MIT/Apache-2.0"
+version = "0.5.0"
+license = "MIT OR Apache-2.0"
 readme = "README.md"
 keywords = ["bzip", "encoding"]
-repository = "https://github.com/alexcrichton/bzip2-rs"
-homepage = "https://github.com/alexcrichton/bzip2-rs"
+repository = "https://github.com/trifectatechfoundation/bzip2-rs"
+homepage = "https://github.com/trifectatechfoundation/bzip2-rs"
 documentation = "https://docs.rs/bzip2"
 description = """
 Bindings to libbzip2 for bzip2 compression and decompression exposed as
@@ -15,6 +14,7 @@ Reader/Writer streams.
 """
 categories = ["compression", "api-bindings"]
 rust-version = "1.65.0" # MSRV
+publish = true
 
 [workspace]
 
