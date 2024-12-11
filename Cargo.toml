@@ -21,7 +21,13 @@ rust-version = "1.65.0" # MSRV
 [dependencies]
 libc = "0.2"
 bzip2-sys = { version = "0.1.11", path = "bzip2-sys", optional = true }
-libbz2-rs-sys = { version = "0.1.0", optional = true }
+
+[dependencies.libbz2-rs-sys]
+version = "0.1.0"
+# Don't enable the stdio feature for better portability.
+default-features = false
+features = ["rust-allocator"]
+optional = true
 
 [dev-dependencies]
 rand = "0.8"
