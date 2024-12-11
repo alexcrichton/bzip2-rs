@@ -51,6 +51,8 @@ jobs:
       shell: bash
       if: matrix.build == 'msrv'
     - run: cargo test
+    - run: cargo test --no-default-features --features libbz2-rs-sys
+      if: matrix.build != 'msrv'
 
   rustfmt:
     name: Rustfmt
