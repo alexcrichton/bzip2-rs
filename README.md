@@ -10,9 +10,19 @@ By default, `bzip2-rs` attempts to use the system `libbz2`. When `libbz2` is not
 is built from source. A from source build requires a functional C toolchain for your target, and may not 
 work for all targets (in particular webassembly).
 
+*`libbz2-rs-sys`*
+
+Since version 0.5.0, this crate also supports using [libbz2-rs-sys](https://crates.io/crates/libbz2-rs-sys),
+a drop-in compatible rust implementation of `libbz2`. With this feature enabled, cross-compilation should work
+like any other rust code, and no C toolchain is needed to compile this crate or its dependencies.
+
+```sh
+bzip2 = { version = "0.5.0", default-features = false, features = ["libbz2-rs-sys"] }
+```
+
 *`static`*
 
-Always build `libbz2` from source, and statically link it. 
+Always build `libbz2` from source, and statically link it. When `libbz2-rs-sys` is enabled, static mode is always used.
 
 ## License
 
