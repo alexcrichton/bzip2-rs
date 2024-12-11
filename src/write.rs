@@ -311,6 +311,13 @@ mod tests {
     }
 
     #[test]
+    fn write_empty2() {
+        let mut d = BzDecoder::new(Vec::new());
+        d.write(b"").unwrap();
+        d.finish().unwrap();
+    }
+
+    #[test]
     fn qc() {
         ::quickcheck::quickcheck(test as fn(_) -> _);
 
