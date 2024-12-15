@@ -287,6 +287,14 @@ impl<W: Write> Drop for BzDecoder<W> {
     }
 }
 
+impl<W: Write> Drop for BzEncoder<W> {
+    fn drop(&mut self) {
+        if self.obj.is_some() {
+            let _ = self.try_finish();
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{BzDecoder, BzEncoder};
