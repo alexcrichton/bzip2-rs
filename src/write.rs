@@ -204,11 +204,11 @@ impl<W: Write> BzDecoder<W> {
     /// [`write`]: Self::write
     pub fn try_finish(&mut self) -> io::Result<()> {
         while !self.done {
-            let read_before = self.total_in();
-            let written_now = self.write(&[])?;
-
-            if self.total_in() == read_before && written_now == 0 {
-                let msg = "Input EOF reached before logical stream ends";
+            // The write is effectively a `self.flush()`, but we want to know how many
+            // bytes were written. exit if no input was read and no output was written
+            if self.write(&[])? == 0 {
+                // finishing the output stream is effectively EOF of the input
+                let msg = "Input EOF reached before logical stream end";
                 return Err(io::Error::new(io::ErrorKind::UnexpectedEof, msg));
             }
         }
