@@ -36,8 +36,10 @@ quickcheck = "1.0"
 
 [features]
 default = ["dep:bzip2-sys"]
-# Use `libbz2-rs-sys` instead of the C FFI bindings of `bzip2-sys`
-# Using the rust implementation is always static
-libbz2-rs-sys = ["dep:libbz2-rs-sys", "static"]
-# Enable this feature if you want to have a statically linked bzip2
+# Use the pure rust `libbz2-rs-sys` instead of the C FFI bindings of `bzip2-sys`
+# The rust bzip2 implementation is always statically linked.
+libbz2-rs-sys = ["dep:libbz2-rs-sys"]
+# Always build `libbz2` from C source, and statically link it.
+# This flag is only meaningful when `bzip2-sys` is used,
+# and has no effect when `libbz2-rs-sys` is used as the bzip2 implementation.
 static = ["bzip2-sys?/static"]

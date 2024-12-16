@@ -22,7 +22,8 @@ bzip2 = { version = "0.5.0", default-features = false, features = ["libbz2-rs-sy
 
 *`static`*
 
-Always build `libbz2` from source, and statically link it. When `libbz2-rs-sys` is enabled, static mode is always used.
+Always build `libbz2` from C source, and statically link it. This flag is only meaningful when `bzip2-sys` is used,
+and has no effect when `libbz2-rs-sys` is used as the bzip2 implementation.
 
 ## License
 
