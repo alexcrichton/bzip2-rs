@@ -82,28 +82,39 @@ pub mod write;
 pub struct Compression(u32);
 
 impl Compression {
-    /// Create a new compression spec with a specific numeric level (0-9).
+    /// Create a new compression spec with a specific numeric level in the range `1..=9`.
+    #[deprecated(since = "0.5.1", note = "use try_new instead")]
     pub fn new(level: u32) -> Compression {
         Compression(level)
     }
 
     /// Do not compress.
+    #[deprecated(since = "0.5.1", note = "libbz2 does not support compresson level 0")]
     pub fn none() -> Compression {
         Compression(0)
     }
 
+    /// Create a new compression spec with a specific numeric level in the range `1..=9`.
+    pub const fn try_new(level: u32) -> Option<Compression> {
+        if level >= 1 && level <= 9 {
+            Some(Compression(level))
+        } else {
+            None
+        }
+    }
+
     /// Optimize for the best speed of encoding.
-    pub fn fast() -> Compression {
+    pub const fn fast() -> Compression {
         Compression(1)
     }
 
-    /// Optimize for the size of data being encoded.
-    pub fn best() -> Compression {
+    /// Optimize for smallest output size.
+    pub const fn best() -> Compression {
         Compression(9)
     }
 
     /// Return the compression level as an integer.
-    pub fn level(&self) -> u32 {
+    pub const fn level(&self) -> u32 {
         self.0
     }
 }
