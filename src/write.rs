@@ -309,7 +309,8 @@ mod tests {
     }
 
     #[test]
-    fn write_empty() {
+    fn roundtrip_empty() {
+        // this encoded and then decodes an empty input file
         let d = BzDecoder::new(Vec::new());
         let mut c = BzEncoder::new(d, Compression::default());
         let _ = c.write(b"").unwrap();
@@ -318,8 +319,24 @@ mod tests {
     }
 
     #[test]
-    fn write_empty_drop() {
+    fn finish_empty_explicit() {
+        // The empty sequence is not a valid .bzip2 file!
+        // A valid file at least includes the magic bytes, the checksum, etc.
+        //
+        // This used to loop infinitely, see
+        //
+        // - https://github.com/trifectatechfoundation/bzip2-rs/issues/96
+        // - https://github.com/trifectatechfoundation/bzip2-rs/pull/97
+        let mut d = BzDecoder::new(Vec::new());
+        d.write(b"").unwrap();
+        let e = d.finish().unwrap_err();
+        assert_eq!(e.kind(), std::io::ErrorKind::UnexpectedEof);
+    }
+
+    #[test]
+    fn finish_empty_drop() {
         // the drop implementation used to loop infinitely for empty input
+        //
         // see https://github.com/trifectatechfoundation/bzip2-rs/pull/118
         let d = BzDecoder::new(Vec::new());
         drop(d);
