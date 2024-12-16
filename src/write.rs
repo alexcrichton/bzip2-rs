@@ -204,14 +204,12 @@ impl<W: Write> BzDecoder<W> {
     /// [`write`]: Self::write
     pub fn try_finish(&mut self) -> io::Result<()> {
         while !self.done {
-            let before = self.total_in();
-            let written = self.write(&[])?;
+            let read_before = self.total_in();
+            let written_now = self.write(&[])?;
 
-            if self.total_in() == before && written == 0 {
-                return Err(io::Error::new(
-                    io::ErrorKind::UnexpectedEof,
-                    "Input EOF reached before logical stream ends",
-                ));
+            if self.total_in() == read_before && written_now == 0 {
+                let msg = "Input EOF reached before logical stream ends";
+                return Err(io::Error::new(io::ErrorKind::UnexpectedEof, msg));
             }
         }
         self.dump()
@@ -317,6 +315,14 @@ mod tests {
         let _ = c.write(b"").unwrap();
         let data = c.finish().unwrap().finish().unwrap();
         assert_eq!(&data[..], b"");
+    }
+
+    #[test]
+    fn write_empty_drop() {
+        // the drop implementation used to loop infinitely for empty input
+        // see https://github.com/trifectatechfoundation/bzip2-rs/pull/118
+        let d = BzDecoder::new(Vec::new());
+        drop(d);
     }
 
     #[test]
