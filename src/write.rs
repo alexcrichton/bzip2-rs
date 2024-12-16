@@ -310,7 +310,7 @@ mod tests {
 
     #[test]
     fn roundtrip_empty() {
-        // this encoded and then decodes an empty input file
+        // this encodes and then decodes an empty input file
         let d = BzDecoder::new(Vec::new());
         let mut c = BzEncoder::new(d, Compression::default());
         let _ = c.write(b"").unwrap();
