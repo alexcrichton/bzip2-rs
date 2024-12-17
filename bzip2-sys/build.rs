@@ -26,6 +26,7 @@ fn main() {
     let dst = PathBuf::from(env::var_os("OUT_DIR").unwrap());
 
     cfg.include("bzip2-1.0.8")
+        .flag("-fdebug-prefix-map=$(pwd -L)=.")
         .define("_FILE_OFFSET_BITS", Some("64"))
         .define("BZ_NO_STDIO", None)
         .file("bzip2-1.0.8/blocksort.c")
