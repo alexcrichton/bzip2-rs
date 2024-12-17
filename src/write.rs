@@ -391,4 +391,29 @@ mod tests {
                 .into_inner()
         }
     }
+
+    #[test]
+    fn terminate_on_drop() {
+        // Test that dropping the BzEncoder will result in a valid, decompressable datastream
+        let s = "12345".repeat(100000);
+
+        let mut compressed = Vec::new();
+        {
+            let mut c: Box<dyn std::io::Write> =
+                Box::new(BzEncoder::new(&mut compressed, Compression::default()));
+            c.write_all(b"12834").unwrap();
+            c.write_all(s.as_bytes()).unwrap();
+            c.flush().unwrap();
+        }
+        assert!(!compressed.is_empty());
+
+        let uncompressed = {
+            let mut d = BzDecoder::new(Vec::new());
+            d.write_all(&compressed).unwrap();
+            d.finish().unwrap()
+        };
+        assert_eq!(&uncompressed[0..5], b"12834");
+        assert_eq!(uncompressed.len(), 500005);
+        assert!(format!("12834{}", s).as_bytes() == &*uncompressed);
+    }
 }
