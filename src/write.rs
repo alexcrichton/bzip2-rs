@@ -12,6 +12,7 @@ pub struct BzEncoder<W: Write> {
     obj: Option<W>,
     buf: Vec<u8>,
     done: bool,
+    panicked: bool,
 }
 
 /// A compression stream which will have compressed data written to it and
@@ -32,17 +33,21 @@ impl<W: Write> BzEncoder<W> {
             obj: Some(obj),
             buf: Vec::with_capacity(32 * 1024),
             done: false,
+            panicked: false,
         }
     }
 
     fn dump(&mut self) -> io::Result<()> {
         while !self.buf.is_empty() {
-            let n = match self.obj.as_mut().unwrap().write(&self.buf) {
-                Ok(n) => n,
+            self.panicked = true;
+            let r = self.obj.as_mut().unwrap().write(&self.buf);
+            self.panicked = false;
+
+            match r {
+                Ok(n) => self.buf.drain(..n),
                 Err(ref err) if err.kind() == io::ErrorKind::Interrupted => continue,
                 Err(err) => return Err(err),
             };
-            self.buf.drain(..n);
         }
         Ok(())
     }
@@ -289,7 +294,7 @@ impl<W: Write> Drop for BzDecoder<W> {
 
 impl<W: Write> Drop for BzEncoder<W> {
     fn drop(&mut self) {
-        if self.obj.is_some() {
+        if self.obj.is_some() && !self.panicked {
             let _ = self.try_finish();
         }
     }
