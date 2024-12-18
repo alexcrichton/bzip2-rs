@@ -22,6 +22,7 @@ pub struct BzDecoder<W: Write> {
     obj: Option<W>,
     buf: Vec<u8>,
     done: bool,
+    panicked: bool,
 }
 
 impl<W: Write> BzEncoder<W> {
@@ -167,6 +168,7 @@ impl<W: Write> BzDecoder<W> {
             obj: Some(obj),
             buf: Vec::with_capacity(32 * 1024),
             done: false,
+            panicked: false,
         }
     }
 
@@ -185,12 +187,15 @@ impl<W: Write> BzDecoder<W> {
 
     fn dump(&mut self) -> io::Result<()> {
         while !self.buf.is_empty() {
-            let n = match self.obj.as_mut().unwrap().write(&self.buf) {
-                Ok(n) => n,
+            self.panicked = true;
+            let r = self.obj.as_mut().unwrap().write(&self.buf);
+            self.panicked = false;
+
+            match r {
+                Ok(n) => self.buf.drain(..n),
                 Err(ref err) if err.kind() == io::ErrorKind::Interrupted => continue,
                 Err(err) => return Err(err),
             };
-            self.buf.drain(..n);
         }
         Ok(())
     }
