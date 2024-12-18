@@ -12,6 +12,7 @@ pub struct BzEncoder<W: Write> {
     obj: Option<W>,
     buf: Vec<u8>,
     done: bool,
+    panicked: bool,
 }
 
 /// A compression stream which will have compressed data written to it and
@@ -21,6 +22,7 @@ pub struct BzDecoder<W: Write> {
     obj: Option<W>,
     buf: Vec<u8>,
     done: bool,
+    panicked: bool,
 }
 
 impl<W: Write> BzEncoder<W> {
@@ -32,17 +34,21 @@ impl<W: Write> BzEncoder<W> {
             obj: Some(obj),
             buf: Vec::with_capacity(32 * 1024),
             done: false,
+            panicked: false,
         }
     }
 
     fn dump(&mut self) -> io::Result<()> {
         while !self.buf.is_empty() {
-            let n = match self.obj.as_mut().unwrap().write(&self.buf) {
-                Ok(n) => n,
+            self.panicked = true;
+            let r = self.obj.as_mut().unwrap().write(&self.buf);
+            self.panicked = false;
+
+            match r {
+                Ok(n) => self.buf.drain(..n),
                 Err(ref err) if err.kind() == io::ErrorKind::Interrupted => continue,
                 Err(err) => return Err(err),
             };
-            self.buf.drain(..n);
         }
         Ok(())
     }
@@ -162,6 +168,7 @@ impl<W: Write> BzDecoder<W> {
             obj: Some(obj),
             buf: Vec::with_capacity(32 * 1024),
             done: false,
+            panicked: false,
         }
     }
 
@@ -180,12 +187,15 @@ impl<W: Write> BzDecoder<W> {
 
     fn dump(&mut self) -> io::Result<()> {
         while !self.buf.is_empty() {
-            let n = match self.obj.as_mut().unwrap().write(&self.buf) {
-                Ok(n) => n,
+            self.panicked = true;
+            let r = self.obj.as_mut().unwrap().write(&self.buf);
+            self.panicked = false;
+
+            match r {
+                Ok(n) => self.buf.drain(..n),
                 Err(ref err) if err.kind() == io::ErrorKind::Interrupted => continue,
                 Err(err) => return Err(err),
             };
-            self.buf.drain(..n);
         }
         Ok(())
     }
@@ -287,6 +297,14 @@ impl<W: Write> Drop for BzDecoder<W> {
     }
 }
 
+impl<W: Write> Drop for BzEncoder<W> {
+    fn drop(&mut self) {
+        if self.obj.is_some() && !self.panicked {
+            let _ = self.try_finish();
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::{BzDecoder, BzEncoder};
@@ -382,5 +400,33 @@ mod tests {
                 .unwrap()
                 .into_inner()
         }
+    }
+
+    #[test]
+    fn terminate_on_drop() {
+        // Test that dropping the BzEncoder flushes bytes to the output, so that
+        // we get a valid, decompressable datastream
+        //
+        // see https://github.com/trifectatechfoundation/bzip2-rs/pull/121
+        let s = "12345".repeat(100);
+
+        let mut compressed = Vec::new();
+        {
+            let mut c: Box<dyn std::io::Write> =
+                Box::new(BzEncoder::new(&mut compressed, Compression::default()));
+            c.write_all(b"12834").unwrap();
+            c.write_all(s.as_bytes()).unwrap();
+            c.flush().unwrap();
+        }
+        assert!(!compressed.is_empty());
+
+        let uncompressed = {
+            let mut d = BzDecoder::new(Vec::new());
+            d.write_all(&compressed).unwrap();
+            d.finish().unwrap()
+        };
+        assert_eq!(&uncompressed[0..5], b"12834");
+        assert_eq!(uncompressed.len(), s.len() + "12834".len());
+        assert!(format!("12834{}", s).as_bytes() == &*uncompressed);
     }
 }
