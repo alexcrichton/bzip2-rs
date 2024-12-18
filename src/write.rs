@@ -394,8 +394,11 @@ mod tests {
 
     #[test]
     fn terminate_on_drop() {
-        // Test that dropping the BzEncoder will result in a valid, decompressable datastream
-        let s = "12345".repeat(100000);
+        // Test that dropping the BzEncoder flushes bytes to the output, so that
+        // we get a valid, decompressable datastream
+        //
+        // see https://github.com/trifectatechfoundation/bzip2-rs/pull/121
+        let s = "12345".repeat(100);
 
         let mut compressed = Vec::new();
         {
@@ -413,7 +416,7 @@ mod tests {
             d.finish().unwrap()
         };
         assert_eq!(&uncompressed[0..5], b"12834");
-        assert_eq!(uncompressed.len(), 500005);
+        assert_eq!(uncompressed.len(), s.len() + "12834".len());
         assert!(format!("12834{}", s).as_bytes() == &*uncompressed);
     }
 }
