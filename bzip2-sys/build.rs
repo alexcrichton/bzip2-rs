@@ -4,6 +4,7 @@ extern crate pkg_config;
 use std::path::PathBuf;
 use std::{env, fs};
 
+#[cfg(not(feature = "__disabled"))]
 fn main() {
     let mut cfg = cc::Build::new();
     let target = env::var("TARGET").unwrap();
@@ -45,3 +46,6 @@ fn main() {
     println!("cargo:root={}", dst.display());
     println!("cargo:include={}", dst.join("include").display());
 }
+
+#[cfg(feature = "__disabled")]
+fn main() {}
